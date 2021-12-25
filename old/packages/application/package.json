@@ -1,0 +1,32 @@
+{
+  "name": "@hashnode-cover/application",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=14"
+  },
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000"
+  },
+  "dependencies": {
+    "next": "12.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "16.11.12",
+    "@types/dotenv": "^8.2.0",
+    "@types/applicationinsights": "^0.20.0",
+    "@types/react": "17.0.37",
+    "@auth0/nextjs-auth0": "^1.6.1",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "applicationinsights": "^2.2.0",
+    "ts-node": "^10.4.0",
+    "@azure/storage-queue": "^12.7.0",
+    "@azure/identity": "^2.0.1",
+    "@azure/app-configuration": "^1.3.0",
+    "dotenv": "^10.0.0",
+    "next-transpile-modules": "^9.0.0"
+  }
+}

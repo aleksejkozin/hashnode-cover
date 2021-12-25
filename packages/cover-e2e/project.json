@@ -1,0 +1,28 @@
+{
+  "root": "packages/cover-e2e",
+  "sourceRoot": "packages/cover-e2e/src",
+  "projectType": "application",
+  "targets": {
+    "e2e": {
+      "executor": "@nrwl/cypress:cypress",
+      "options": {
+        "cypressConfig": "packages/cover-e2e/cypress.json",
+        "devServerTarget": "cover:serve"
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "cover:serve:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/cover-e2e/**/*.{js,ts}"]
+      }
+    }
+  },
+  "tags": [],
+  "implicitDependencies": ["cover"]
+}

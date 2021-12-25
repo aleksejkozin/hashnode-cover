@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "projects": {
+    "common": "packages/common",
+    "cover": "packages/cover",
+    "cover-e2e": "packages/cover-e2e",
+    "workers": "packages/workers"
+  }
+}

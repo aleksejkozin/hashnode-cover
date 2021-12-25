@@ -1,0 +1,17 @@
+{
+  "name": "@hashnode-cover/common",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=14"
+  },
+  "scripts": {
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@azure/identity": "^2.0.1",
+    "applicationinsights": "^2.2.0",
+    "@azure/app-configuration": "^1.3.0"
+  }
+}

@@ -1,0 +1,3 @@
+name: hashnodecover
+runtime: nodejs
+description: This cloud application will update your Hashnode cover image to the latest article's comment

@@ -1,0 +1,14 @@
+# Use this file to provide credentials to different resource Pulumi manages
+# Run "az login" to login to Azure, don't add anything here
+config:
+  auth0:domain: dev-2bsgb3hl.us.auth0.com
+  auth0:clientId:
+    secure: AAABAJkj6OAmsNUntd1ndk2Iicah33cP4pNZoP0eUM+1WiyHqLthOAi+8KpOkb5BDKFfly8OlKQ0wIIkUNM1pQ==
+  auth0:clientSecret:
+    secure: AAABAIzxsqHvsMhdOuK0224In4c9hBQk+U9ANbccxCy+TakPrUxDbXRH+FD0fKZ+f7kAvraygFfcyl9PfJ8o2LxrJttC8jGWJ47uOJBcgiuzmvg0S5hXXKOj9N/GTwm5
+  azure-native:location: EastUS
+  hashnodecover:DOCKER_REGISTRY_SERVER: devregistry5ae83545.azurecr.io
+  hashnodecover:DOCKER_REGISTRY_PASSWORD:
+    secure: AAABAGDlC3x13gDoJ1BK8LCsEgsyvmJyLmqtifBQHdVJKKEgLhk4ZVRq4UY3++P3KgTkROHjWjrKhwAkXtKFYg==
+  hashnodecover:DOCKER_REGISTRY_USERNAME:
+    secure: AAABADB2Psk+YusAZ8hrPBjPS2EenEAn8+Fx5Xgtefq7HHyXuZ1gGrgskjeoYozwXqyj
