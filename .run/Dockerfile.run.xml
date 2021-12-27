@@ -2,10 +2,18 @@
   <configuration default="false" name="Dockerfile" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
     <deployment type="dockerfile">
       <settings>
-        <option name="imageTag" value="runner" />
+        <option name="imageTag" value="local_runner" />
         <option name="attachToContainerNeeded" value="true" />
+        <option name="buildArgs">
+          <list>
+            <DockerEnvVarImpl>
+              <option name="name" value="--target" />
+              <option name="value" value="local_runner" />
+            </DockerEnvVarImpl>
+          </list>
+        </option>
         <option name="buildKitEnabled" value="true" />
-        <option name="containerName" value="runner" />
+        <option name="containerName" value="local_runner" />
         <option name="portBindings">
           <list>
             <DockerPortBindingImpl>

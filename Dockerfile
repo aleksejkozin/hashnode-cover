@@ -49,8 +49,28 @@ RUN --mount=type=cache,target=/usr/local/share/.cache \
 
 
 # Production runner
-# Azure cloud will acutomatically provide managed identity credentials as env variables
+# Azure cloud will acutomatically provide a managed identity credentials as env variables
+# But you can't just run the container locally, you'll need to do "az login"
+# To do "az login" you need to have the azure cli installed
+# To install the azure cli you can copy bin/ lib/ from mcr.microsoft.com/azure-cli docker container
 FROM builder AS runner
+WORKDIR /monorepo
+EXPOSE 3000
+CMD ./run.sh --prod
+
+
+FROM mcr.microsoft.com/azure-cli as login
+# You will be promted to click a link in the terminal to login
+# This will generate /root/.azure
+RUN az login
+
+
+FROM builder as local_runner
+# Installing the cli, +1GB
+COPY --from=login /usr/local/bin/ /usr/local/bin/
+COPY --from=login /usr/local/lib/ /usr/local/lib/
+# Installing the credentials
+COPY --from=login /root/.azure /root/.azure
 WORKDIR /monorepo
 EXPOSE 3000
 CMD ./run.sh --prod

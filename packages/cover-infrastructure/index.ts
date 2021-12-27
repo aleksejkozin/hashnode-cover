@@ -223,6 +223,9 @@ const appName = prefix
 /*
 Build and publish the Docker container image
 The image will be several gigabytes, it way take 10-20 minutes to push it to the registry
+Then another 10-20 minutes to run it
+Deployment is slow
+Try run the docker container locally before trying to deploy it, it may save you a lot of time
 */
 const image = new docker.Image(`${appName}image`, {
   imageName: interpolate`${dockerRegistry.server}/${appName}`,
@@ -269,6 +272,8 @@ const app = new web.WebApp(appName, {
         },
       },
     },
+    // Nodes count. More nodes – more power
+    preWarmedInstanceCount: 1,
   },
 })
 // Our app will be run on these endpoints
