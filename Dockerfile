@@ -25,6 +25,7 @@
 
 
 FROM node:14-alpine AS dependencies
+# Here we install our native dependencies
 RUN apk update && apk add --no-cache git
 # Without workdir yarn install will hang cuz it will parse all the system files
 WORKDIR /monorepo
