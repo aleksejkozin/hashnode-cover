@@ -272,8 +272,9 @@ const app = new web.WebApp(appName, {
         },
       },
     },
-    // Nodes count. More nodes – more power
-    preWarmedInstanceCount: 1,
+    // nodes count, more nodes – more power
+    // 2 nodes allow a seamless update of a docker container
+    preWarmedInstanceCount: 2,
   },
 })
 // Our app will be run on these endpoints
