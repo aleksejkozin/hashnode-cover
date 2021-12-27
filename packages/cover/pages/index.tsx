@@ -1,4 +1,5 @@
-import styles from './index.module.scss';
+import styles from './index.module.scss'
+import { withPageAuthRequired } from '@auth0/nextjs-auth0'
 
 export function Index() {
   /*
@@ -13,7 +14,7 @@ export function Index() {
           <div id="welcome">
             <h1>
               <span> Hello there, </span>
-              Welcome cover 👋
+              Welcome cover 👋 :3
             </h1>
           </div>
 
@@ -409,7 +410,9 @@ export function Index() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default Index;
+export default Index
+
+export const getServerSideProps = withPageAuthRequired()

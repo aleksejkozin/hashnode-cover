@@ -1,0 +1,63 @@
+{
+  "root": "packages/cover-infrastructure",
+  "sourceRoot": "packages/cover-infrastructure/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/node:build",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/packages/cover-infrastructure",
+        "main": "packages/cover-infrastructure/src/main.ts",
+        "tsConfig": "packages/cover-infrastructure/tsconfig.app.json",
+        "assets": [
+          "packages/cover-infrastructure/src/assets"
+        ]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false,
+          "fileReplacements": [
+            {
+              "replace": "packages/cover-infrastructure/src/environments/environment.ts",
+              "with": "packages/cover-infrastructure/src/environments/environment.prod.ts"
+            }
+          ]
+        }
+      }
+    },
+    "deploy": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "pulumi up --stack prod -y",
+        "cwd": "packages/cover-infrastructure"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/cover-infrastructure/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "coverage/packages/cover-infrastructure"
+      ],
+      "options": {
+        "jestConfig": "packages/cover-infrastructure/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

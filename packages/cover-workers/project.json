@@ -1,0 +1,52 @@
+{
+  "root": "packages/cover-workers",
+  "sourceRoot": "packages/cover-workers/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/node:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/cover-workers",
+        "main": "packages/cover-workers/src/main.ts",
+        "tsConfig": "packages/cover-workers/tsconfig.app.json",
+        "assets": ["packages/cover-workers/src/assets"]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false,
+          "fileReplacements": [
+            {
+              "replace": "packages/cover-workers/src/environments/environment.ts",
+              "with": "packages/cover-workers/src/environments/environment.prod.ts"
+            }
+          ]
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/node:execute",
+      "options": {
+        "buildTarget": "cover-workers:build"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/cover-workers/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/packages/cover-workers"],
+      "options": {
+        "jestConfig": "packages/cover-workers/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

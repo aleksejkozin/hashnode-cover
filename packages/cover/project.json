@@ -5,7 +5,9 @@
   "targets": {
     "build": {
       "executor": "@nrwl/next:build",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "defaultConfiguration": "production",
       "options": {
         "root": "packages/cover",
@@ -19,6 +21,7 @@
       "executor": "@nrwl/next:server",
       "options": {
         "buildTarget": "cover:build",
+        "port": 3000,
         "dev": true
       },
       "configurations": {
@@ -36,7 +39,9 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/cover"],
+      "outputs": [
+        "coverage/packages/cover"
+      ],
       "options": {
         "jestConfig": "packages/cover/jest.config.js",
         "passWithNoTests": true
@@ -44,9 +49,13 @@
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
-        "lintFilePatterns": ["packages/cover/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": [
+          "packages/cover/**/*.{ts,tsx,js,jsx}"
+        ]
       }
     }
   },
