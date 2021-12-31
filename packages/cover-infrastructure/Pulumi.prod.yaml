@@ -4,7 +4,20 @@ config:
   auth0:clientSecret:
     secure: AAABAIzxsqHvsMhdOuK0224In4c9hBQk+U9ANbccxCy+TakPrUxDbXRH+FD0fKZ+f7kAvraygFfcyl9PfJ8o2LxrJttC8jGWJ47uOJBcgiuzmvg0S5hXXKOj9N/GTwm5
   auth0:domain: dev-2bsgb3hl.us.auth0.com
+
+  azure-native:clientId: 8fefbb75-76ec-421f-9b2c-6cf7eed1927e
+  azure-native:clientSecret:
+    secure: AAABAEQcjErjEm/99b0Bd9OjzZin1yg0/YMQt9KX/e5TeyEdDelm8Ss540jwv/qePD/mpMg7GJee+yPCGr1jjFJe/fMx
   azure-native:location: EastUS
+  azure-native:subscriptionId: 1b9fad02-07cd-4610-8b55-37fa112217d6
+  azure-native:tenantId: 42ad1ae8-3e15-4212-ac1a-fda35c668d31
+
+  azure:clientId: 8fefbb75-76ec-421f-9b2c-6cf7eed1927e
+  azure:clientSecret:
+    secure: AAABAFGmkQrnZpgAQDLWEepMKve5uN1A8tfrdeafE4Lfq6eyAbh/+DUyAPNzxyIlUL3v11kWuOQdCVlMoNfNI5FOTUp9
+  azure:subscriptionId: 1b9fad02-07cd-4610-8b55-37fa112217d6
+  azure:tenantId: 42ad1ae8-3e15-4212-ac1a-fda35c668d31
+
   hashnodecover:DOCKER_REGISTRY_PASSWORD:
     secure: AAABAGDlC3x13gDoJ1BK8LCsEgsyvmJyLmqtifBQHdVJKKEgLhk4ZVRq4UY3++P3KgTkROHjWjrKhwAkXtKFYg==
   hashnodecover:DOCKER_REGISTRY_SERVER: devregistry5ae83545.azurecr.io

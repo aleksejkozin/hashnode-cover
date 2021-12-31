@@ -1,16 +1,19 @@
-on: [ push ]
-
-name: AzureLoginSample
-
+name: Deploy to Production
+on:
+  push:
+    branches:
+      - master
 jobs:
-
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-
-      - uses: azure/login@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          node-version: 14.x
 
-      - run: |
-          az webapp list --query "[?state=='Running']"
+      - name: Install JS dependencies
+        run: yarn install
+
+      - name: Deploy to production
+        run: yarn deploy
