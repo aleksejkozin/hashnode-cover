@@ -9,20 +9,13 @@
       "options": {
         "outputPath": "dist/packages/loadenv",
         "main": "packages/loadenv/src/main.ts",
-        "tsConfig": "packages/loadenv/tsconfig.app.json",
-        "assets": ["packages/loadenv/src/assets"]
+        "tsConfig": "packages/loadenv/tsconfig.app.json"
       },
       "configurations": {
         "production": {
           "optimization": true,
           "extractLicenses": true,
-          "inspect": false,
-          "fileReplacements": [
-            {
-              "replace": "packages/loadenv/src/environments/environment.ts",
-              "with": "packages/loadenv/src/environments/environment.prod.ts"
-            }
-          ]
+          "inspect": false
         }
       }
     },

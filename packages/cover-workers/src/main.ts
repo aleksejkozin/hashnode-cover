@@ -1,32 +1,36 @@
-/*
-This module will be executed on each application boot
-Import here all the workers you want to run
-*/
+// noinspection InfiniteLoopJS
 
-/*
-Connecting node instance to applicationinsights
-console.log() will be redirected to the cloud for KQL convenient search
-Will also collect some node performance information
-*/
-import * as appInsights from 'applicationinsights'
-
-if (process.env.APPINSIGHTS_INSTRUMENTATIONKEY) {
-  appInsights
-    .setup(process.env.APPINSIGHTS_INSTRUMENTATIONKEY)
-    .setAutoDependencyCorrelation(true)
-    .setAutoCollectRequests(true)
-    .setAutoCollectPerformance(true, true)
-    .setAutoCollectExceptions(true)
-    .setAutoCollectDependencies(true)
-    .setAutoCollectConsole(true)
-    .setUseDiskRetryCaching(true)
-    .setSendLiveMetrics(false)
-    .setDistributedTracingMode(appInsights.DistributedTracingModes.AI)
-    .start()
-}
+import { CronJob } from 'cron'
+import { isMainAppInstance, sleep } from '@hashnode-cover/common'
 
 console.log('Starting workers...')
 
-setInterval(() => {
-  console.log('Workers are running!')
-}, 5000)
+/*
+You can run periodic tasks using the cron package
+You can get info about cron syntax here: https://crontab.cronhub.io/
+However, if you run your system on multiple nodes, you would like to run the task only on 1 main node
+*/
+new CronJob('*/5 * * * * *', async () => {
+  if (await isMainAppInstance()) {
+    console.log('Running reporting...')
+  } else {
+    console.log('[Not] the main node instance. Skipping reporting.')
+  }
+}).start()
+
+/*
+This is how you can write queue processors:
+- Endless loop
+- Check for work
+- If there is no work, sleep a bit
+Queue will load balance workers, so you can run such tasks on all nodes
+*/
+const main = async () => {
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    console.log('Processing something...')
+    await sleep(6000)
+  }
+}
+
+main()

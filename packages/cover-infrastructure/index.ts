@@ -1,13 +1,25 @@
 /*
 # Infrastructure as Code
+
+The idea:
+- Usually, you have a lot of configurations in different clouds done manually via UI
+- You can put all these configs in one file and deploy it from here
+- This way you can reproduce and reason about the configs
+
+You need IaC only if you can't use Vercel/Netlify clouds. Examples:
+- You need to use a custom Docker container. Eg, you have a native dependency you can't install via a npm package
+- You need to create additional infrastructure in a cloud: queue, compute vision, blob storage, log collectors, cloud settings, oidc providers, domains, proxies, etc
+
 If you run this file with Pulumi it will automatically create resources in:
 - Azure cloud
 - Auth0 cloud
 - MongoDB cloud
+- etc
 All the settings are 1 to 1 to UI of the corresponding clouds
 
 Benefits:
 - You store all infrastructure configs in one place
+- You can copy the infrastructure as text files
 - You can use JS to describe your infrastructure, eg, loops/conditions/comments
 - You can work on infrastructure with git, eg, code reviews, merge requests
 - You can have dev/prod deployments that will be identical, cuz you run them from code
@@ -65,7 +77,7 @@ const prefix = stack === 'prod' ? 'hashnode' : `hn${stack}`
 Here you put resources that you don't want to manage with Pulumi
 Common reasons:
 - Pulumi doesn't support the resource
-- The resource is mission critical and you don't want to accidentally delete it
+- The resource is the mission critical and you don't want to accidentally delete it
 - The resource costs significant money and you don't want duplicate it multiple times
 */
 
@@ -82,6 +94,9 @@ The hardware that will run our applications. Can spawn hundreds of Docker nodes 
 */
 const appServicePlanId =
   '/subscriptions/1b9fad02-07cd-4610-8b55-37fa112217d6/resourceGroups/devgroup4cb7cbb8/providers/Microsoft.Web/serverfarms/devservice37a9ba7d'
+
+// MongoDB instance
+const MONGO_CONNECTION_STRING = cfg.requireSecret('MONGO_CONNECTION_STRING')
 
 // ----------------
 // --- SECURITY ---
@@ -119,7 +134,17 @@ The root resource group
 It's like a folder that holds all your Azure cloud resources
 */
 const resourceGroup = new resources.ResourceGroup(`${prefix}group`)
-// workers should be able to read app configurations of resourceGroup
+new authorization.RoleAssignment(`${prefix}allowReadResources`, {
+  scope: resourceGroup.id,
+  principalId: workers.id,
+  principalType: 'Group',
+  /*
+  Reader
+  View all resources, but does not allow you to make any changes.
+  */
+  roleDefinitionId:
+    '/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7',
+})
 new authorization.RoleAssignment(`${prefix}allowReadConfigs`, {
   // For this resource
   scope: resourceGroup.id,
@@ -144,7 +169,8 @@ const appConfig = new appconfiguration.ConfigurationStore(
   {
     resourceGroupName: resourceGroup.name,
     sku: {
-      name: 'Standard',
+      // Standard is $1.20 a day, lol, I will never return these $30
+      name: 'Free',
     },
   },
   /*
@@ -154,6 +180,7 @@ const appConfig = new appconfiguration.ConfigurationStore(
   */
   { protect: true }
 )
+
 const setConfig = (keyValueName: string, value: pulumi.Input<string>) =>
   new appconfiguration.KeyValue(prefix + keyValueName + 'config', {
     resourceGroupName: resourceGroup.name,
@@ -207,11 +234,6 @@ new storage.BlobContainer(
   // We have valuable client data there, so let's block any delete attempt
   { protect: true }
 )
-
-/*
-MongoDB instance
-// TODO: add
-*/
 
 // ------------------------
 // --- THE MONOLITH APP ---
@@ -273,8 +295,7 @@ const app = new web.WebApp(appName, {
       },
     },
     // nodes count, more nodes – more power
-    // 2 nodes allow a seamless update of a docker container
-    preWarmedInstanceCount: 2,
+    preWarmedInstanceCount: 1,
   },
 })
 // Our app will be run on these endpoints
@@ -314,11 +335,13 @@ Configure Environment Variables
 Part of the variables available only on the cloud
 Part of the variables available on the cloud and locally
 */
+
 // Cloud Apps, local Docker containers, etc, everyone will have these environment variables
 const globalEnvironmentVariables = {
   AUTH0_ISSUER_BASE_URL: interpolate`https://${auth0.config.domain}`,
   AUTH0_CLIENT_ID: auth0Application.clientId,
   AUTH0_CLIENT_SECRET: auth0Application.clientSecret,
+  MONGO_CONNECTION_STRING,
 }
 // We need to save environment variables for the local app runs
 all(globalEnvironmentVariables).apply((env) =>
@@ -356,6 +379,8 @@ new web.WebAppApplicationSettings(appName + 'settings', {
 
 /*
 What a ride!
-This file is the hardest part of our app
-Creating and configuring cloud resources is a major pinpoint and hassle of devs
+
+As you can see configuration of infrastructure is always a big hassle
+This is why it is very sane to delegate it to Vercel/Netlify clouds
+However, you can't delegate it in complex cases
 */

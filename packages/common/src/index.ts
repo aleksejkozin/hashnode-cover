@@ -2,10 +2,15 @@
 Use @hashnode-cover/common to store code that will be useful in multiple packages.
 */
 
-import {exec} from 'child_process'
-import {promisify} from 'util'
-
 export * from './config'
+export * from './mongo'
+
+import { exec } from 'child_process'
+import { promisify } from 'util'
+import { WebSiteManagementClient } from '@azure/arm-appservice'
+import { DefaultAzureCredential } from '@azure/identity'
+
+export const credentials = new DefaultAzureCredential()
 
 // Escape string. We want protect ourself from an injection
 export const e = (x: string) => x.replace(/(["'$`\\])/g, '\\$1')
@@ -18,23 +23,34 @@ Don't forge to escape any variables with e()
 */
 export const asyncExec = promisify(exec)
 
+export const sleep = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms))
+
 /*
-When running in the Azure cloud this function will return "true" for only 1 of all the app instances
+When running in a cloud this function will return "true" for only 1 of all the app instances
 In other cases it returns "false"
 This allows us to run tasks on only 1 of instance
-*/
-export const isMainApplicationInstance = async (): Promise<boolean> => {
-  const group = process.env.WEBSITE_RESOURCE_GROUP ?? ''
-  const webAppName = process.env.WEBSITE_SITE_NAME ?? ''
 
-  if (!group || !webAppName) {
+Needs a Reader access role
+*/
+export const isMainAppInstance = async () => {
+  if (
+    !process.env.WEBSITE_OWNER_NAME ||
+    !process.env.WEBSITE_RESOURCE_GROUP ||
+    !process.env.WEBSITE_SITE_NAME
+  ) {
     return false
   }
 
-  const {stdout} = await asyncExec(
-    `az webapp list-instances -g "${e(group)}" -n "${e(webAppName)}"`,
-  )
+  const subscriptionId = process.env.WEBSITE_OWNER_NAM.split('+')[0]
+  const client = new WebSiteManagementClient(credentials, subscriptionId)
 
-  const ids = JSON.parse(stdout).map((x: any) => x.name)
-  return ids.length > 0 && ids[0] === process.env.WEBSITE_INSTANCE_ID
+  const mainInstance = await client.webApps
+    .listInstanceIdentifiers(
+      process.env.WEBSITE_RESOURCE_GROUP,
+      process.env.WEBSITE_SITE_NAME
+    )
+    .next()
+
+  return mainInstance.value.name === process.env.WEBSITE_INSTANCE_ID
 }

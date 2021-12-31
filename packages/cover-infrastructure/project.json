@@ -3,33 +3,6 @@
   "sourceRoot": "packages/cover-infrastructure/src",
   "projectType": "application",
   "targets": {
-    "build": {
-      "executor": "@nrwl/node:build",
-      "outputs": [
-        "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "dist/packages/cover-infrastructure",
-        "main": "packages/cover-infrastructure/src/main.ts",
-        "tsConfig": "packages/cover-infrastructure/tsconfig.app.json",
-        "assets": [
-          "packages/cover-infrastructure/src/assets"
-        ]
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "extractLicenses": true,
-          "inspect": false,
-          "fileReplacements": [
-            {
-              "replace": "packages/cover-infrastructure/src/environments/environment.ts",
-              "with": "packages/cover-infrastructure/src/environments/environment.prod.ts"
-            }
-          ]
-        }
-      }
-    },
     "deploy": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {

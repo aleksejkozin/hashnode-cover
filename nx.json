@@ -29,5 +29,8 @@
       }
     }
   },
-  "defaultProject": "cover"
+  "defaultProject": "cover",
+  "implicitDependencies": {
+    "workspace.json": "*"
+  }
 }
