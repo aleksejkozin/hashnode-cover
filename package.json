@@ -6,28 +6,28 @@
   "engines": {
     "node": ">=14"
   },
+  "scripts": {
+    "dev": "yarn nx run-many --target=serve --parallel --all",
+    "predev": "yarn nx loadenv cover-infrastructure",
+    "deploy": "yarn nx run-many --target=deploy --all --prod"
+  },
   "comments": {
     "warning": "Any package.json update will cause a huge Docker recompile. Try to avoid updating this file",
     "dependencies": "There is no difference between devDependencies and dependencies, both will be in production",
     "dev": "Will watch for all files and run all services. Needs .env.global to function",
-    "loadenv": "Will create .env.global, should not be run with a nx runner cuz it will not wait for async to finish",
+    "loadenv": "Will create packages/cover-infrastructure/output.json",
     "deploy": "Will push everything to the cloud"
-  },
-  "scripts": {
-    "dev": "yarn loadenv && nx run-many --target=serve --parallel --all",
-    "loadenv": "nx build loadenv --prod && env-cmd node dist/packages/loadenv/main.js",
-    "deploy": "nx run-many --target=deploy --all --prod"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^1.6.2",
     "@azure/app-configuration": "^1.3.1",
     "@azure/arm-appservice": "^10.0.0",
     "@azure/identity": "^2.0.1",
-    "@nrwl/cli": "^13.4.1",
-    "@nrwl/next": "^13.4.1",
-    "@nrwl/node": "^13.4.1",
+    "@nrwl/cli": "^13.4.2",
+    "@nrwl/next": "^13.4.2",
+    "@nrwl/node": "^13.4.2",
     "@nrwl/nx-cloud": "^13.0.1",
-    "@nrwl/workspace": "^13.4.1",
+    "@nrwl/workspace": "^13.4.2",
     "applicationinsights": "^2.2.0",
     "axios": "^0.24.0",
     "concurrently": "^6.5.1",

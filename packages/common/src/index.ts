@@ -2,8 +2,9 @@
 Use @hashnode-cover/common to store code that will be useful in multiple packages.
 */
 
-export * from './config'
 export * from './mongo'
+
+// Common
 
 import { exec } from 'child_process'
 import { promisify } from 'util'

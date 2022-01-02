@@ -40,3 +40,4 @@ Thumbs.db
 /old/
 .env.local
 .env.global
+/packages/cover-infrastructure/output.json

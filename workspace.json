@@ -5,7 +5,6 @@
     "cover": "packages/cover",
     "cover-e2e": "packages/cover-e2e",
     "cover-infrastructure": "packages/cover-infrastructure",
-    "cover-workers": "packages/cover-workers",
-    "loadenv": "packages/loadenv"
+    "cover-workers": "packages/cover-workers"
   }
 }

@@ -5,6 +5,7 @@ export default withApiAuthRequired(async (req, res) => {
 
   res.status(200).json({
     message: 'hello!',
+    baseUrl: process.env.AUTH0_BASE_URL,
     user: session?.user,
   })
 })

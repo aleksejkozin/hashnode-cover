@@ -9,7 +9,7 @@ config:
   hashnodecover:DOCKER_REGISTRY_SERVER: devregistry5ae83545.azurecr.io
   hashnodecover:DOCKER_REGISTRY_USERNAME: devregistry5ae83545
   hashnodecover:MONGO_CONNECTION_STRING:
-    secure: AAABAF+//BwZlAhrJKTWaAQSdk9vpjNHyBlzYUXmS5wioOo20H4jhgq5y8XU1AuTiIviP/cLag37SbsKt2lSm2u31b2ar8b55fMXAVGZgXJF76+0CMBckfcxDpP0/yLNg9hHfr+gPNnh9VEYyXaUbY+00Q2uX9sQbldjg1lmmMH0Y7+r4ovQxvJxLgJt
+    secure: AAABAIAGF5Qgu3y7sGmlev1lEKAm8bQ1qw59pM4SMiuZhnpdzWyadfNgnkyOk54EtzHfADpdJ8GyM3u3IYyQPUnQZN4h6McJdm6KLTKw18uaxHxan1Kkw4j8jnnq0LoG19/8Q7pdllDfnI5SCDFtw2cp5A5kGSpG8eKpEZil/RPGz4eFb4AKiSEgncUx
   hashnodecover:appServicePlanId: /subscriptions/1b9fad02-07cd-4610-8b55-37fa112217d6/resourceGroups/devgroup4cb7cbb8/providers/Microsoft.Web/serverfarms/devservice37a9ba7d
   hashnodecover:prefix: hashnode
   hashnodecover:resourceGroupName: hashnodedev

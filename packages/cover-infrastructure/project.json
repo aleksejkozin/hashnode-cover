@@ -6,7 +6,14 @@
     "deploy": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "pulumi up --stack prod -y",
+        "command": "pulumi up -y --stack=prod",
+        "cwd": "packages/cover-infrastructure"
+      }
+    },
+    "loadenv": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "pulumi stack output --show-secrets --json --stack=prod > output.json",
         "cwd": "packages/cover-infrastructure"
       }
     },

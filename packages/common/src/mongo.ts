@@ -1,5 +1,9 @@
 import { MongoClient } from 'mongodb'
 
-export const mongo = new MongoClient(process.env.MONGO_CONNECTION_STRING)
+export const mongo = process.env.MONGO_CONNECTION_STRING
+  ? new MongoClient(process.env.MONGO_CONNECTION_STRING)
+  : undefined
 
-mongo.connect().then(() => console.log('Connected to MongoDB'))
+console.log('process.env.MONGO_CONNECTION_STRING', process.env.MONGO_CONNECTION_STRING)
+
+mongo?.connect().then(() => console.log('Connected to MongoDB'))
