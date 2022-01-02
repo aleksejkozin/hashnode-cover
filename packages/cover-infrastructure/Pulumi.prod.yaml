@@ -1,12 +1,15 @@
 config:
   auth0:clientId: jvt35N95IZRpvagEtQM84jTVdpW08i9D
   auth0:clientSecret:
-    secure: AAABABav7/CRVtFaqHuWZya3VIz9oQtwmFaUITkHaAvbmeRaZEU4cYQ262/yNyD43IfrrZdTR8S3hqkKDZi4vEc7MFottWYJswyMiHLRDG3uFNaWc2SejYV/IBktg/4/
+    secure: AAABAGzlH3w6IRKz1KUyiGoBSFMffyoEpmF0LK9fRi4zXrd7ypi+I0qY6+muqwrQHQznpjt9mf7HsIds4XAPs4WmHLMInepVvVWpjp9QQcCtQRzdVAxE5Aw7ZHdfILTI
   auth0:domain: dev-2bsgb3hl.us.auth0.com
   azure-native:location: EastUS
   hashnodecover:DOCKER_REGISTRY_PASSWORD:
-    secure: AAABABSpsk9B72YM/ajYSB3uH2/QPHDGiu35SWeWN6vKU4W3RIZl9I/qUh1iKaiPOcIQ9J6QrL8OlyszYDtZMA==
+    secure: AAABAHfRIAdAD2fJvOtjr6VafkfKYvWuOFEQN8F2NfcZ8v8dsfNLJuFMT7ZhF/ZUm7W0am842ajgrEaxxEBgUA==
   hashnodecover:DOCKER_REGISTRY_SERVER: devregistry5ae83545.azurecr.io
   hashnodecover:DOCKER_REGISTRY_USERNAME: devregistry5ae83545
   hashnodecover:MONGO_CONNECTION_STRING:
-    secure: AAABAD6+84J7p9zKssvSoY8vBJtAzDKZmeO8BfhhxsYVoUVGTZRMqlAbXNYggcEgHIqvX8rZvqqyd34twkTYK6UTsCnPnpOp6XRSlsAxP667b+V1b8L1ovpFvBtxeGG3rer/seiFNP+G++C8xbkJYUVJ48RtwXYJ5aPwaKQLUY4xY5ox5sXiPX9esYpr
+    secure: AAABAF+//BwZlAhrJKTWaAQSdk9vpjNHyBlzYUXmS5wioOo20H4jhgq5y8XU1AuTiIviP/cLag37SbsKt2lSm2u31b2ar8b55fMXAVGZgXJF76+0CMBckfcxDpP0/yLNg9hHfr+gPNnh9VEYyXaUbY+00Q2uX9sQbldjg1lmmMH0Y7+r4ovQxvJxLgJt
+  hashnodecover:appServicePlanId: /subscriptions/1b9fad02-07cd-4610-8b55-37fa112217d6/resourceGroups/devgroup4cb7cbb8/providers/Microsoft.Web/serverfarms/devservice37a9ba7d
+  hashnodecover:prefix: hashnode
+  hashnodecover:resourceGroupName: hashnodedev

@@ -65,20 +65,28 @@ import * as random from '@pulumi/random'
 
 // Constants
 const cfg = new pulumi.Config()
-const stack = pulumi.getStack()
+
 // All Pulumi resources will have this prefix for human-convenience
-const prefix = stack === 'prod' ? 'hashnode' : `hn${stack}`
+const p = cfg.require('prefix')
 
 // -----------------------------
 // --- EXTERNAL DEPENDENCIES ---
 // -----------------------------
 
 /*
+Pulumi.*.yaml
+
 Here you put resources that you don't want to manage with Pulumi
 Common reasons:
+- Security. Some resources could be created only by admins
 - Pulumi doesn't support the resource
-- The resource is the mission critical and you don't want to accidentally delete it
-- The resource costs significant money and you don't want duplicate it multiple times
+- The resource is the mission critical, and you don't want to accidentally delete it
+- The resource costs significant money, and you don't want duplicate it multiple times
+
+Azure pre-requirements:
+- You should have access to Azure portal
+- You should be an owner of the target resource group where you want to deploy resources
+- You should have an app service plan created
 */
 
 // Here we will store all out containers, but we need an admin access
@@ -88,19 +96,65 @@ const dockerRegistry = {
   password: cfg.requireSecret('DOCKER_REGISTRY_PASSWORD'),
 }
 
-/*
-Azure App Service Plan. Costs money. Will create manually.
-The hardware that will run our applications. Can spawn hundreds of Docker nodes inside.
-*/
-const appServicePlanId =
-  '/subscriptions/1b9fad02-07cd-4610-8b55-37fa112217d6/resourceGroups/devgroup4cb7cbb8/providers/Microsoft.Web/serverfarms/devservice37a9ba7d'
-
-// MongoDB instance
-const MONGO_CONNECTION_STRING = cfg.requireSecret('MONGO_CONNECTION_STRING')
+// CI Service Principal should have owner access to this group
+const resourceGroup = resources.getResourceGroupOutput({
+  resourceGroupName: cfg.require('resourceGroupName'),
+})
 
 // ----------------
 // --- SECURITY ---
 // ----------------
+
+/*
+CI service principal
+Will be used by GitHub to manage resources
+
+Starting June 30th of 2022 will be deprecated
+You will need to migrate to MSAL
+https://developer.microsoft.com/en-us/graph/graph-explorer
+*/
+const ciApplication = new azuread.Application(`${p}ciapp`, {
+  displayName: `${p}ciapp`,
+})
+// You can attach roles to service principals
+const ciServicePrincipal_ = new azuread.ServicePrincipal(`${p}cisp`, {
+  applicationId: ciApplication.applicationId,
+})
+const ciServicePrincipalId = ciServicePrincipal_.id.apply(async (id) => {
+  /*
+  Unfortunately, we need to wait for the service principal to be created
+  This is a Terraform bug, azuread uses Terraform under the hood
+  */
+  console.log(
+    'Waiting for 30s for AD Service Principal eventual consistency...'
+  )
+  await new Promise((resolve) => setTimeout(resolve, 30000))
+  return id
+})
+// CI Service should have full access to the resource group
+new authorization.RoleAssignment(`${p}ciisowner`, {
+  scope: resourceGroup.id,
+  principalId: ciServicePrincipalId,
+  principalType: 'ServicePrincipal',
+  /*
+  Owner
+  Grants full access to manage all resources, including the ability to assign roles in Azure RBAC.
+  */
+  roleDefinitionId:
+    '/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635',
+})
+const ciPassword = new azuread.ApplicationPassword(`${p}ciapppass`, {
+  applicationObjectId: ciApplication.objectId,
+})
+// Create these variables in GitHub secrets, this way GitHub Pulumi will have access to Azure
+export const ARM_SUBSCRIPTION_ID = authorization
+  .getClientConfig()
+  .then((x) => x.subscriptionId)
+export const ARM_TENANT_ID = authorization
+  .getClientConfig()
+  .then((x) => x.tenantId)
+export const ARM_CLIENT_ID = ciApplication.applicationId
+export const ARM_CLIENT_SECRET = ciPassword.value
 
 /*
 You can add users into this Azure AD group and they will have an access to run the app
@@ -110,70 +164,49 @@ To run the app a user needs a set of permissions like:
 The Azure AD group has all these permissions set,
 You only need to manually add your devs there so they could run the app locally
 */
-const workers = new azuread.Group(
-  `${prefix}workers`,
-  {
-    displayName: `${prefix}workers`,
-    owners: [
-      // The owner is who run this script
-      azuread.getClientConfig({}).then((current) => current.objectId),
-    ],
-    // This group is for IAM access
-    securityEnabled: true,
-  },
-  // It's a hassle add devs back, slow auth propagation, so, let's not delete the group
-  { protect: true }
-)
+const workers = new azuread.Group(`${p}workers`, {
+  displayName: `${p}workers`,
+  owners: [ciServicePrincipalId],
+  // This group is for IAM access
+  securityEnabled: true,
+})
+new authorization.RoleAssignment(`${p}allowreadconfigs`, {
+  // For this resource
+  scope: resourceGroup.id,
+  // Assign a role for this group
+  principalId: workers.id,
+  principalType: 'Group',
+  /*
+  roleDefinitionId could be found in Azure UI, it's a constant for the role
+
+  App Configuration Data Reader
+  Allows read access to App Configuration data.
+  */
+  roleDefinitionId:
+    '/providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071',
+})
+new authorization.RoleAssignment(`${p}allowreadresources`, {
+  scope: resourceGroup.id,
+  principalId: workers.id,
+  principalType: 'Group',
+  /*
+  Reader
+  View all resources, but does not allow you to make any changes.
+  */
+  roleDefinitionId:
+    '/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7',
+})
 
 // -----------------------
 // --- BASIC RESOURCES ---
 // -----------------------
 
 /*
-The root resource group
-It's like a folder that holds all your Azure cloud resources
-*/
-const resourceGroup = new resources.ResourceGroup(`${prefix}group`)
-new authorization.RoleAssignment(
-  `${prefix}allowreadresources`,
-  {
-    scope: resourceGroup.id,
-    principalId: workers.id,
-    principalType: 'Group',
-    /*
-    Reader
-    View all resources, but does not allow you to make any changes.
-    */
-    roleDefinitionId:
-      '/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7',
-  },
-  { dependsOn: [workers] }
-)
-new authorization.RoleAssignment(
-  `${prefix}allowreadconfigs`,
-  {
-    // For this resource
-    scope: resourceGroup.id,
-    // Assign a role for this group
-    principalId: workers.id,
-    principalType: 'Group',
-    /*
-    roleDefinitionId could be found in Azure UI, it's a constant for the role
-    App Configuration Data Reader
-    Allows read access to App Configuration data.
-    */
-    roleDefinitionId:
-      '/providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071',
-  },
-  { dependsOn: [workers] }
-)
-
-/*
 Here we store all our app configs
 This way local app instances and cloud can share the same configs
 */
 const appConfig = new appconfiguration.ConfigurationStore(
-  `${prefix}config`,
+  `${p}config`,
   {
     resourceGroupName: resourceGroup.name,
     sku: {
@@ -182,17 +215,17 @@ const appConfig = new appconfiguration.ConfigurationStore(
       */
       name: 'Free',
     },
-  },
+  }
   /*
   All our instances should have a stable access point to config, so let's block any delete attempt
   This will allow to have stable APP_CONFIG_NAME across all the system
   If you change appConfig you need to manually update .env
   */
-  { protect: true }
+  // { protect: true }
 )
 
 const setConfig = (keyValueName: string, value: pulumi.Input<string>) =>
-  new appconfiguration.KeyValue(prefix + keyValueName + 'config', {
+  new appconfiguration.KeyValue(p + keyValueName + 'config', {
     resourceGroupName: resourceGroup.name,
     configStoreName: appConfig.name,
     keyValueName: keyValueName,
@@ -203,7 +236,7 @@ const setConfig = (keyValueName: string, value: pulumi.Input<string>) =>
 Will collect all our logs and provide KQL search interface to them
 Handy for debugging
 */
-const appInsights = new insights.Component(`${prefix}insights`, {
+const appInsights = new insights.Component(`${p}insights`, {
   resourceGroupName: resourceGroup.name,
   // All these configurations are a mystery for me
   flowType: 'Bluefield',
@@ -216,7 +249,7 @@ const appInsights = new insights.Component(`${prefix}insights`, {
 Here we will store documents, images, and queues
 Basically an infinite cloud data storage
 */
-const storageAccount = new storage.StorageAccount(`${prefix}sa`, {
+const storageAccount = new storage.StorageAccount(`${p}sa`, {
   resourceGroupName: resourceGroup.name,
   sku: {
     // Standard Locally Redundant Storage. You can bump it for more redundancy
@@ -233,16 +266,16 @@ setConfig('storageAccount', storageAccount.name)
 
 // Container is like a folder for your data. Here we will store articles' cover images
 new storage.BlobContainer(
-  `${prefix}blobimages`,
+  `${p}blobimages`,
   {
     resourceGroupName: resourceGroup.name,
     accountName: storageAccount.name,
     containerName: 'articleimages',
     // we don't need a public access for our images
     publicAccess: 'None',
-  },
+  }
   // We have valuable client data there, so let's block any delete attempt
-  { protect: true }
+  // { protect: true }
 )
 
 // ------------------------
@@ -250,7 +283,7 @@ new storage.BlobContainer(
 // ------------------------
 
 // Should be user-friendly for prod cuz will be a part of domain
-const appName = prefix
+const appName = p
 
 /*
 Build and publish the Docker container image
@@ -273,7 +306,7 @@ const image = new docker.Image(`${appName}image`, {
 // We can now run our Docker container with AppServicePlan, eg, create an WebApp
 const app = new web.WebApp(appName, {
   resourceGroupName: resourceGroup.name,
-  serverFarmId: appServicePlanId,
+  serverFarmId: cfg.require('appServicePlanId'),
   httpsOnly: true,
   kind: 'app',
   identity: {
@@ -314,14 +347,10 @@ const localUrl = 'http://localhost:3000'
 const appUrls = [appUrl, localUrl]
 
 // Our app should have access to our cloud resources
-new azuread.GroupMember(
-  appName + 'isworker',
-  {
-    groupObjectId: workers.id,
-    memberObjectId: app.identity.apply((x) => x!.principalId),
-  },
-  { dependsOn: [workers] }
-)
+new azuread.GroupMember(appName + 'isworker', {
+  groupObjectId: workers.id,
+  memberObjectId: app.identity.apply((x) => x!.principalId),
+})
 
 /*
 Configure auth
@@ -329,7 +358,7 @@ We will use https://auth0.com/ as an OIDC provider
 */
 const auth0Application = new auth0.Client(appName + 'auth0', {
   appType: 'regular_web',
-  name: `Hashnode Cover App ${prefix}`,
+  name: `Hashnode Cover App ${p}`,
   description: `Is an automatically managed auth account, please, don't edit manually`,
   jwtConfiguration: {
     /*
@@ -355,7 +384,7 @@ const globalEnvironmentVariables = {
   AUTH0_ISSUER_BASE_URL: interpolate`https://${auth0.config.domain}`,
   AUTH0_CLIENT_ID: auth0Application.clientId,
   AUTH0_CLIENT_SECRET: auth0Application.clientSecret,
-  MONGO_CONNECTION_STRING,
+  MONGO_CONNECTION_STRING: cfg.requireSecret('MONGO_CONNECTION_STRING'),
 }
 // We need to save environment variables for the local app runs
 all(globalEnvironmentVariables).apply((env) =>
