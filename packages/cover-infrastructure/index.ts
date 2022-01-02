@@ -134,31 +134,39 @@ The root resource group
 It's like a folder that holds all your Azure cloud resources
 */
 const resourceGroup = new resources.ResourceGroup(`${prefix}group`)
-new authorization.RoleAssignment(`${prefix}allowReadResources`, {
-  scope: resourceGroup.id,
-  principalId: workers.id,
-  principalType: 'Group',
-  /*
-  Reader
-  View all resources, but does not allow you to make any changes.
-  */
-  roleDefinitionId:
-    '/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7',
-})
-new authorization.RoleAssignment(`${prefix}allowReadConfigs`, {
-  // For this resource
-  scope: resourceGroup.id,
-  // Assign a role for this group
-  principalId: workers.id,
-  principalType: 'Group',
-  /*
-  roleDefinitionId could be found in Azure UI, it's a constant for the role
-  App Configuration Data Reader
-  Allows read access to App Configuration data.
-  */
-  roleDefinitionId:
-    '/providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071',
-})
+new authorization.RoleAssignment(
+  `${prefix}allowreadresources`,
+  {
+    scope: resourceGroup.id,
+    principalId: workers.id,
+    principalType: 'Group',
+    /*
+    Reader
+    View all resources, but does not allow you to make any changes.
+    */
+    roleDefinitionId:
+      '/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7',
+  },
+  { dependsOn: [workers] }
+)
+new authorization.RoleAssignment(
+  `${prefix}allowreadconfigs`,
+  {
+    // For this resource
+    scope: resourceGroup.id,
+    // Assign a role for this group
+    principalId: workers.id,
+    principalType: 'Group',
+    /*
+    roleDefinitionId could be found in Azure UI, it's a constant for the role
+    App Configuration Data Reader
+    Allows read access to App Configuration data.
+    */
+    roleDefinitionId:
+      '/providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071',
+  },
+  { dependsOn: [workers] }
+)
 
 /*
 Here we store all our app configs
@@ -169,7 +177,9 @@ const appConfig = new appconfiguration.ConfigurationStore(
   {
     resourceGroupName: resourceGroup.name,
     sku: {
-      // Standard is $1.20 a day, lol, I will never return these $30
+      /*
+      Standard is $1.20 a day, lol, I will never return these $30 #cloudbill
+      */
       name: 'Free',
     },
   },
@@ -304,10 +314,14 @@ const localUrl = 'http://localhost:3000'
 const appUrls = [appUrl, localUrl]
 
 // Our app should have access to our cloud resources
-new azuread.GroupMember(appName + 'isworker', {
-  groupObjectId: workers.id,
-  memberObjectId: app.identity.apply((x) => x!.principalId),
-})
+new azuread.GroupMember(
+  appName + 'isworker',
+  {
+    groupObjectId: workers.id,
+    memberObjectId: app.identity.apply((x) => x!.principalId),
+  },
+  { dependsOn: [workers] }
+)
 
 /*
 Configure auth
@@ -381,6 +395,6 @@ new web.WebAppApplicationSettings(appName + 'settings', {
 What a ride!
 
 As you can see configuration of infrastructure is always a big hassle
-This is why it is very sane to delegate it to Vercel/Netlify clouds
+This is why it's very sane to delegate it to Vercel/Netlify clouds
 However, you can't delegate it in complex cases
 */
