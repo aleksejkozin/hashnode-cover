@@ -22,7 +22,7 @@ steps:
       versionSpec: '14.x'
     displayName: 'Install Node.js'
   - task: Pulumi@1
-      displayName: 'Install Pulumi'
+    displayName: 'Install Pulumi'
 
   - script: |
       yarn install --frozen-lockfile --prefer-offline
