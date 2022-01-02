@@ -26,6 +26,8 @@ steps:
       export PATH=$PATH:$HOME/.pulumi/bin
       pulumi login
     displayName: 'Install Pulumi'
+    env:
+      PULUMI_ACCESS_TOKEN: $(PULUMI_ACCESS_TOKEN)
 
   - script: |
       export PATH=$PATH:$HOME/.pulumi/bin
