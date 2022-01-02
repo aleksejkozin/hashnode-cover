@@ -6,10 +6,6 @@ The idea:
 - You can put all these configs in one file and deploy it from here
 - This way you can reproduce and reason about the configs
 
-You need IaC only if you can't use Vercel/Netlify clouds. Examples:
-- You need to use a custom Docker container. Eg, you have a native dependency you can't install via a npm package
-- You need to create additional infrastructure in a cloud: queue, compute vision, blob storage, log collectors, cloud settings, oidc providers, domains, proxies, etc
-
 If you run this file with Pulumi it will automatically create resources in:
 - Azure cloud
 - Auth0 cloud
@@ -24,6 +20,14 @@ Benefits:
 - You can work on infrastructure with git, eg, code reviews, merge requests
 - You can have dev/prod deployments that will be identical, cuz you run them from code
 - You can even have deployment for every git branch
+
+# Initial Run
+The first Pulumi run should be done locally. It will create:
+- ARM_SUBSCRIPTION_ID
+- ARM_TENANT_ID
+- ARM_CLIENT_ID
+- ARM_CLIENT_SECRET
+You should use these credentials to give your CI pipeline access to Azure
 
 # Azure vs AWS vs Google
 I use Azure cloud as the main cloud, but you can switch to AWS or Google, the idea is the same
@@ -116,25 +120,22 @@ https://developer.microsoft.com/en-us/graph/graph-explorer
 const ciApplication = new azuread.Application(`${p}ciapp`, {
   displayName: `${p}ciapp`,
 })
-// You can attach roles to service principals
-const ciServicePrincipal_ = new azuread.ServicePrincipal(`${p}cisp`, {
+/*
+You can attach roles to service principals
+
+Unfortunately, we need to wait for the service principal to be created
+This is a Terraform bug, azuread uses Terraform under the hood
+
+The first run of the Pulumi will guarantee to fail cuz we need to wait for the service principal to be created
+After it would created the bug will be fixed
+*/
+const ciServicePrincipal = new azuread.ServicePrincipal(`${p}cisp`, {
   applicationId: ciApplication.applicationId,
-})
-const ciServicePrincipalId = ciServicePrincipal_.id.apply(async (id) => {
-  /*
-  Unfortunately, we need to wait for the service principal to be created
-  This is a Terraform bug, azuread uses Terraform under the hood
-  */
-  console.log(
-    'Waiting for 30s for AD Service Principal eventual consistency...'
-  )
-  await new Promise((resolve) => setTimeout(resolve, 30000))
-  return id
 })
 // CI Service should have full access to the resource group
 new authorization.RoleAssignment(`${p}ciisowner`, {
   scope: resourceGroup.id,
-  principalId: ciServicePrincipalId,
+  principalId: ciServicePrincipal.id,
   principalType: 'ServicePrincipal',
   /*
   Owner
@@ -166,7 +167,7 @@ You only need to manually add your devs there so they could run the app locally
 */
 const workers = new azuread.Group(`${p}workers`, {
   displayName: `${p}workers`,
-  owners: [ciServicePrincipalId],
+  owners: ciServicePrincipal.owners.apply((x) => [...x, ciServicePrincipal.id]),
   // This group is for IAM access
   securityEnabled: true,
 })
@@ -421,9 +422,7 @@ new web.WebAppApplicationSettings(appName + 'settings', {
 })
 
 /*
-What a ride!
-
 As you can see configuration of infrastructure is always a big hassle
 This is why it's very sane to delegate it to Vercel/Netlify clouds
-However, you can't delegate it in complex cases
+However, you can't delegate everything
 */
