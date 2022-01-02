@@ -21,15 +21,12 @@ steps:
     inputs:
       versionSpec: '14.x'
     displayName: 'Install Node.js'
-
-  - script: |
-      yarn install
-    displayName: 'yarn install --frozen-lockfile --prefer-offline'
-
   - task: Pulumi@1
-  - script: pulumi --help
+      displayName: 'Install Pulumi'
+
   - script: |
+      yarn install --frozen-lockfile --prefer-offline
       yarn run deploy
-    displayName: 'Pulumi deploy'
+    displayName: 'Deploy'
     env:
       PULUMI_ACCESS_TOKEN: $(PULUMI_ACCESS_TOKEN)
