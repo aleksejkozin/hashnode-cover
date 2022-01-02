@@ -12,7 +12,11 @@ steps:
 
   - script: |
       yarn install
+    displayName: 'yarn install'
+
+  - task: Pulumi@1
+    script: |
       yarn run deploy
-    displayName: 'yarn install and deploy'
+    displayName: 'Pulumi deploy'
     env:
       PULUMI_ACCESS_TOKEN: $(PULUMI_ACCESS_TOKEN)
