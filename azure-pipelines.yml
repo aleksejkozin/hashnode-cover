@@ -5,7 +5,7 @@ variables:
   YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
 pool:
-  vmImage: pulumi/pulumi:latest
+  vmImage: ubuntu-latest
 
 steps:
   - task: Cache@2
