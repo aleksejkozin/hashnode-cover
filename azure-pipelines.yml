@@ -15,7 +15,7 @@ steps:
     displayName: 'yarn install'
 
   - task: Pulumi@1
-    script: |
+  - script: |
       yarn run deploy
     displayName: 'Pulumi deploy'
     env:
