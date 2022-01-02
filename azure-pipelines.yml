@@ -21,11 +21,14 @@ steps:
     inputs:
       versionSpec: '14.x'
     displayName: 'Install Node.js'
-  - task: Pulumi@1
+  - script: |
+      curl -fsSL https://get.pulumi.com/ | bash
+      export PATH=$PATH:$HOME/.pulumi/bin
+      pulumi login
     displayName: 'Install Pulumi'
 
   - script: |
-      pulumi about
+      export PATH=$PATH:$HOME/.pulumi/bin
       yarn install --frozen-lockfile --prefer-offline
       yarn run deploy
     displayName: 'Deploy'
