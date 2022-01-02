@@ -5,7 +5,7 @@ variables:
   YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: pulumi/pulumi:latest
 
 steps:
   - task: Cache@2
@@ -21,7 +21,7 @@ steps:
     inputs:
       versionSpec: '14.x'
     displayName: 'Install Node.js'
-  - task: Pulumi@1
+  - task: Pulumi@2
     displayName: 'Install Pulumi'
 
   - script: |
