@@ -21,6 +21,7 @@ steps:
     inputs:
       versionSpec: '14.x'
     displayName: 'Install Node.js'
+
   - task: UsePulumi@0
     inputs:
       version: 'latest'
@@ -30,6 +31,8 @@ steps:
   - script: |
       pulumi login
       yarn install --frozen-lockfile --prefer-offline
+      ls -al ./node_modules
+      ls -al ./node_modules/@pulumi/pulumi/cmd
       yarn run deploy
     displayName: 'Deploy'
     env:
