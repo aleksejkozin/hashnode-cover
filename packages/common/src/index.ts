@@ -35,12 +35,6 @@ This allows us to run tasks on only 1 of the instance
 Needs an Azure Reader access role tho
 */
 export const isMainAppInstance = async () => {
-  console.log(
-    process.env.WEBSITE_OWNER_NAME,
-    process.env.WEBSITE_RESOURCE_GROUP,
-    process.env.WEBSITE_SITE_NAME
-  )
-
   if (
     !process.env.WEBSITE_OWNER_NAME ||
     !process.env.WEBSITE_RESOURCE_GROUP ||
