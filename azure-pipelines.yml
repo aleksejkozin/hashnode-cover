@@ -3,7 +3,6 @@ trigger:
 
 variables:
   YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
-  PULUMI_ACCESS_TOKEN: $(PULUMI_SECRET)
 
 pool:
   vmImage: ubuntu-latest
