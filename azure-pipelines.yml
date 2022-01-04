@@ -35,5 +35,3 @@ steps:
         pulumi login
         yarn install --frozen-lockfile --prefer-offline
         yarn run deploy
-      env:
-        PULUMI_ACCESS_TOKEN: $(PULUMI_ACCESS_TOKEN)
