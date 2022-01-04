@@ -27,14 +27,16 @@ steps:
       version: 'latest'
     displayName: 'Install Pulumi'
 
-  # This task will login into azure cli
+  # This task will log into azure cli and run inlineScript
   - task: AzureCLI@2
     inputs:
       # This subscription should have access to the target azure resource group
       azureSubscription: 'hashnode-cover'
       scriptType: 'bash'
       scriptLocation: 'inlineScript'
+      arguments: '$(PULUMI_ACCESS_TOKEN)'
       inlineScript: |
+        export PULUMI_ACCESS_TOKEN=$1
         pulumi login
         yarn install --frozen-lockfile --prefer-offline
         yarn run deploy
