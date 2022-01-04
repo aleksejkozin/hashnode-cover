@@ -27,6 +27,7 @@ steps:
     displayName: 'Install Pulumi'
 
   - script: |
+      az login
       pulumi login
       yarn install --frozen-lockfile --prefer-offline
       yarn run deploy
