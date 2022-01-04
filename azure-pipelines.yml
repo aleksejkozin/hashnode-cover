@@ -26,11 +26,14 @@ steps:
       version: 'latest'
     displayName: 'Install Pulumi'
 
-  - script: |
-      az login --identity
-      pulumi login
-      yarn install --frozen-lockfile --prefer-offline
-      yarn run deploy
-    displayName: 'Deploy'
-    env:
-      PULUMI_ACCESS_TOKEN: $(PULUMI_ACCESS_TOKEN)
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: 'hashnode-cover'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        pulumi login
+        yarn install --frozen-lockfile --prefer-offline
+        yarn run deploy
+      env:
+        PULUMI_ACCESS_TOKEN: $(PULUMI_ACCESS_TOKEN)
