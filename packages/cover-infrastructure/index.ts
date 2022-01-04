@@ -260,8 +260,9 @@ const app = new web.WebApp(appName, {
   siteConfig: {
     // Could be enabled starting from B1 AppServicePlan
     alwaysOn: true,
-    // Also supports "DOCKER|<image>" if you only have 1 container
-    linuxFxVersion: interpolate`COMPOSE|${dockerCompose}`,
+    // Also supports interpolate`DOCKER|${imageName}` if you only have 1 container
+    // interpolate`COMPOSE|${dockerCompose}`
+    linuxFxVersion: interpolate`DOCKER|${imageName}`,
     httpLoggingEnabled: true,
     detailedErrorLoggingEnabled: true,
     logsDirectorySizeLimit: 35, //in MB

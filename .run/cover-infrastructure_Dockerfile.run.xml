@@ -6,6 +6,15 @@
         <option name="buildKitEnabled" value="true" />
         <option name="containerName" value="runner" />
         <option name="contextFolderPath" value="." />
+        <option name="portBindings">
+          <list>
+            <DockerPortBindingImpl>
+              <option name="containerPort" value="3000" />
+              <option name="hostIp" value="0.0.0.0" />
+              <option name="hostPort" value="3000" />
+            </DockerPortBindingImpl>
+          </list>
+        </option>
         <option name="sourceFilePath" value="packages/cover-infrastructure/Dockerfile" />
       </settings>
     </deployment>

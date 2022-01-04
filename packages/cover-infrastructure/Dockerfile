@@ -43,6 +43,7 @@
 #
 # At some point you will run out of space on your disk cuz containers constantly produce waste
 # In this case run: "docker system prune -a -f"
+#
 
 
 FROM node:14-alpine AS dependencies
@@ -64,12 +65,7 @@ RUN --mount=type=cache,target=/usr/local/share/.cache \
     yarn install --frozen-lockfile --prefer-offline
 
 
-# Production runner
-# Azure cloud will automatically provide a managed identity credentials as MSI env variables
-# But you can't just run the container locally, you'll need to do "az login" or provide MSI credentials via env variables
-# To do "az login" you need to have the azure cli installed, it's a hassle, we will skip it
-# But if you're intereted in the cli, you need to copy /bin/ /lib/ from mcr.microsoft.com/azure-cli
-FROM dependencies AS runner
+FROM dependencies AS builder
 WORKDIR /monorepo
 COPY . .
 RUN --mount=type=cache,target=/usr/local/share/.cache \
@@ -77,4 +73,17 @@ RUN --mount=type=cache,target=/usr/local/share/.cache \
     --mount=type=cache,target=/monorepo/node_modules/.cache \
     yarn nx run-many --target=build --parallel --all --prod
 # You can remove dev dependencies, it will save you ~500Mb, but can create a surprise failed updload
-# It doesn't worth it. Just bake all node_modules in the container
+# It doesn't worth it
+
+
+# Production runner
+# Azure cloud will automatically provide a managed identity credentials as MSI env variables
+# But you can't just run the container locally, you'll need to do "az login" or provide MSI credentials via env variables
+# To do "az login" you need to have the azure cli installed, it's a hassle, we will skip it
+# But if you're intereted in the cli, you need to copy /bin/ /lib/ from mcr.microsoft.com/azure-cli
+FROM builder AS runner
+WORKDIR /monorepo
+EXPOSE 3000
+CMD yarn env-cmd yarn concurrently -k \
+  "env-cmd -f packages/cover/.env          node_modules/.bin/next start dist/packages/cover -p 3000" \
+  "env-cmd -f packages/cover-workers/.env  node dist/packages/cover-workers/main.js"
