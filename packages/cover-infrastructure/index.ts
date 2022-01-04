@@ -227,7 +227,10 @@ services:
     ports:
       - "3000:3000"
     restart: always
-    entrypoint: yarn nx serve cover --prod --watch=false
+    entrypoint: node_modules/.bin/next start dist/packages/cover -p 3000
+    env_file:
+    - packages/cover/.env
+    - .env
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:3000" ]
       interval: 30s
@@ -238,7 +241,10 @@ services:
   workers:
     image: ${imageName}
     restart: always
-    entrypoint: yarn nx serve cover-workers --prod --watch=false
+    entrypoint: node dist/packages/cover-workers/main.js
+    env_file:
+    - packages/cover-workers/.env
+    - .env
 `.apply((x) => Buffer.from(x).toString('base64'))
 
 const app = new web.WebApp(appName, {
