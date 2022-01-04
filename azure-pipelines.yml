@@ -35,6 +35,7 @@ steps:
       scriptType: 'bash'
       scriptLocation: 'inlineScript'
       arguments: '$(PULUMI_ACCESS_TOKEN)'
+      addSpnToEnvironment: true
       inlineScript: |
         export PULUMI_ACCESS_TOKEN=$1
         pulumi login
