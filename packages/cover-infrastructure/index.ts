@@ -73,7 +73,6 @@ import * as authorization from '@pulumi/azure-native/authorization'
 import * as auth0 from '@pulumi/auth0'
 import * as random from '@pulumi/random'
 
-// Constants
 const cfg = new pulumi.Config()
 
 // All Pulumi resources will have this prefix for human-convenience
@@ -106,7 +105,7 @@ const dockerRegistry = {
   password: cfg.requireSecret('DOCKER_REGISTRY_PASSWORD'),
 }
 
-// CI Service Principal should have owner access to this group
+// CI's Service Principal should have owner access to this group
 const resourceGroup = resources.getResourceGroupOutput({
   resourceGroupName: cfg.require('resourceGroupName'),
 })
@@ -201,22 +200,50 @@ Build and publish the Docker container image
 The image will be several gigabytes, it way take 10-20 minutes to push it to the registry
 Then another 10-20 minutes to run it
 Deployment is slow
-Try run the docker container locally before trying to deploy it, it may save you a lot of time
 */
-const image = new docker.Image(`${appName}image`, {
+const { imageName } = new docker.Image(`${appName}image`, {
   imageName: interpolate`${dockerRegistry.server}/${appName}`,
   build: {
     target: 'runner',
     context: path.join(__dirname, '../../'),
-    dockerfile: path.join(__dirname, '../../Dockerfile'),
+    dockerfile: path.join(__dirname, 'Dockerfile'),
     // It seems cacheFrom is super slow, skipping it
     // cacheFrom: { stages: ['dependencies', 'builder', 'runner'] },
   },
   registry: dockerRegistry,
 })
-// We can now run our Docker container with AppServicePlan, eg, create an WebApp
+
+/*
+Beginning of 2022: Don't run your applications with "nx run-many --parallel ..."
+If one of the apps crashes the rest continue to live
+And you want them all dead, so they would be restarted with "restart: always"
+
+--watch=false will make sure that nx will exit on an app crash
+*/
+const dockerCompose = interpolate`
+services:
+  application:
+    image: ${imageName}
+    ports:
+      - "3000:3000"
+    restart: always
+    entrypoint: yarn nx serve cover --prod --watch=false
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 1m
+
+  workers:
+    image: ${imageName}
+    restart: always
+    entrypoint: yarn nx serve cover-workers --prod --watch=false
+`.apply((x) => Buffer.from(x).toString('base64'))
+
 const app = new web.WebApp(appName, {
   resourceGroupName: resourceGroup.name,
+  // We use an external service plan cuz it costs money to create a new one
   serverFarmId: cfg.require('appServicePlanId'),
   httpsOnly: true,
   kind: 'app',
@@ -227,46 +254,28 @@ const app = new web.WebApp(appName, {
   siteConfig: {
     // Could be enabled starting from B1 AppServicePlan
     alwaysOn: true,
-    // Use docker image
-    linuxFxVersion: interpolate`DOCKER|${image.imageName}`,
+    // Also supports "DOCKER|<image>" if you only have 1 container
+    linuxFxVersion: interpolate`COMPOSE|${dockerCompose}`,
     httpLoggingEnabled: true,
     detailedErrorLoggingEnabled: true,
     logsDirectorySizeLimit: 35, //in MB
-    // Let's kill an instance if it doesn't respond to HTTP requests
-    autoHealEnabled: true,
-    autoHealRules: {
-      actions: {
-        actionType: 'Recycle',
-      },
-      triggers: {
-        // If we get 3 20sec requests in 300sec, then Recycle the instance
-        slowRequests: {
-          count: 3,
-          timeTaken: '00:00:20',
-          timeInterval: '00:05:00',
-          path: '/',
-        },
-      },
-    },
     // nodes count, more nodes – more power
     preWarmedInstanceCount: 1,
   },
 })
+
+// Our app should have access to our cloud resources
+new azuread.GroupMember(appName + 'isworker', {
+  groupObjectId: workers.id,
+  memberObjectId: app.identity.apply((x) => x?.principalId),
+})
+
 // Our app will be run on these endpoints
 export const appUrl = interpolate`https://${app.defaultHostName}`
 const localUrl = 'http://localhost:3000'
 const appUrls = [appUrl, localUrl]
 
-// Our app should have access to our cloud resources
-new azuread.GroupMember(appName + 'isworker', {
-  groupObjectId: workers.id,
-  memberObjectId: app.identity.apply((x) => x!.principalId),
-})
-
-/*
-Configure auth
-We will use https://auth0.com/ as an OIDC provider
-*/
+// Configure auth. We will use https://auth0.com/ as an OIDC provider
 const auth0Application = new auth0.Client(appName + 'auth0', {
   appType: 'regular_web',
   name: `Hashnode Cover App ${p}`,
@@ -284,12 +293,6 @@ const auth0Application = new auth0.Client(appName + 'auth0', {
   callbacks: appUrls.map((x) => interpolate`${x}/api/auth/callback`),
 })
 
-/*
-Configure Environment Variables
-Part of the variables available only on the cloud
-Part of the variables available on the cloud and locally
-*/
-
 // Cloud Apps, local Docker containers, etc, everyone will have these environment variables
 export const globalEnvironmentVariables = {
   AUTH0_ISSUER_BASE_URL: interpolate`https://${auth0.config.domain}`,
@@ -303,13 +306,11 @@ new web.WebAppApplicationSettings(appName + 'settings', {
   name: app.name,
   properties: {
     // App Insights config
-    APPLICATIONINSIGHTS_CONNECTION_STRING: interpolate`InstrumentationKey=${appInsights.instrumentationKey}`,
     APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.instrumentationKey,
-    ApplicationInsightsAgent_EXTENSION_VERSION: '~2',
     // Do not persist or share /home/ directory between instances
     WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false',
     // linuxFxVersion use this docker connection to pull images
-    DOCKER_REGISTRY_SERVER_URL: interpolate`https://${dockerRegistry.server}`,
+    DOCKER_REGISTRY_SERVER_URL: `https://${dockerRegistry.server}`,
     DOCKER_REGISTRY_SERVER_USERNAME: dockerRegistry.username,
     DOCKER_REGISTRY_SERVER_PASSWORD: dockerRegistry.password,
     // Continues deployment. Will automatically pull new images
@@ -318,7 +319,7 @@ new web.WebAppApplicationSettings(appName + 'settings', {
     WEBSITES_PORT: '3000',
     // We need to bake this here so common variables update would restart the container
     ...globalEnvironmentVariables,
-    // These AUTH0_* configs are specific to this Docker instance and should not be shared outside
+    // These AUTH0_* configs are specific to this web app instance and should not be shared outside
     AUTH0_BASE_URL: appUrl,
     AUTH0_SECRET: new random.RandomPassword(appName + 'auth0secret', {
       length: 256,

@@ -43,15 +43,15 @@
 #
 # At some point you will run out of space on your disk cuz containers constantly produce waste
 # In this case run: "docker system prune -a -f"
-#
 
 
 FROM node:14-alpine AS dependencies
-# Here we install our native dependencies
+# Here we install our native OS dependencies
 # If you don't have native dependencies, then you don't need Docker, just deploy NextJs to Vercel
 RUN apk update && apk add --no-cache \
     # nx uses git to calculate affected changes
-    git
+    git \
+    curl
 # Without workdir yarn install will hang cuz it will parse all the system files
 WORKDIR /monorepo
 # If package.json hasn't changed you will use this layer as a cache so you'll not wait node_modules to download
@@ -64,7 +64,12 @@ RUN --mount=type=cache,target=/usr/local/share/.cache \
     yarn install --frozen-lockfile --prefer-offline
 
 
-FROM dependencies AS builder
+# Production runner
+# Azure cloud will automatically provide a managed identity credentials as MSI env variables
+# But you can't just run the container locally, you'll need to do "az login" or provide MSI credentials via env variables
+# To do "az login" you need to have the azure cli installed, it's a hassle, we will skip it
+# But if you're intereted in the cli, you need to copy /bin/ /lib/ from mcr.microsoft.com/azure-cli
+FROM dependencies AS runner
 WORKDIR /monorepo
 COPY . .
 RUN --mount=type=cache,target=/usr/local/share/.cache \
@@ -72,18 +77,4 @@ RUN --mount=type=cache,target=/usr/local/share/.cache \
     --mount=type=cache,target=/monorepo/node_modules/.cache \
     yarn nx run-many --target=build --parallel --all --prod
 # You can remove dev dependencies, it will save you ~500Mb, but can create a surprise failed updload
-# It doesn't worth it
-
-
-# Production runner
-# Azure cloud will automatically provide a managed identity credentials as MSI env variables
-# But you can't just run the container locally, you'll need to do "az login" or provide MSI credentials via env variables
-# To do "az login" you need to have the azure cli installed, it's a hassle, we will skip it
-# But if you're intereted in the cli, you need to copy /bin/ /lib/ from mcr.microsoft.com/azure-cli
-FROM builder AS runner
-WORKDIR /monorepo
-EXPOSE 3000
-# --kill-others-on-fail is mandatory so the container image would die if one of the apps dies
-CMD yarn env-cmd yarn concurrently --kill-others-on-fail --raw \
-   'node dist/packages/cover-workers/main.js' \
-   'node_modules/.bin/next start dist/packages/cover'
+# It doesn't worth it. Just bake all node_modules in the container

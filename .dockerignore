@@ -31,4 +31,3 @@ dist
 
 # They are platform dependant and should not be copied inside a container on the first step
 node_modules
-/packages/cover-infrastructure/output.json

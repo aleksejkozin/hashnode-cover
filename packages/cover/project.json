@@ -27,7 +27,8 @@
       "configurations": {
         "production": {
           "buildTarget": "cover:build:production",
-          "dev": false
+          "dev": false,
+          "watch": false
         }
       }
     },

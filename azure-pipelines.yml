@@ -21,10 +21,9 @@ steps:
     inputs:
       versionSpec: '14.x'
     displayName: 'Install Node.js'
-
   - task: UsePulumi@0
     inputs:
-      version: '3.20.0'
+      version: 'latest'
     displayName: 'Install Pulumi'
 
   - script: |

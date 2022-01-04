@@ -6,8 +6,7 @@
     "deploy": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "pulumi up -y --stack=prod",
-        "cwd": "packages/cover-infrastructure",
+        "command": "cd packages/cover-infrastructure && pulumi up -y --stack=prod",
         "parallel": false
       }
     },

@@ -30,9 +30,9 @@ export const sleep = (ms: number) =>
 /*
 When running in a cloud this function will return "true" for only 1 of all the app instances
 In other cases it returns "false"
-This allows us to run tasks on only 1 of instance
+This allows us to run tasks on only 1 of the instance
 
-Needs a Reader access role
+Needs an Azure Reader access role tho
 */
 export const isMainAppInstance = async () => {
   if (
@@ -43,7 +43,7 @@ export const isMainAppInstance = async () => {
     return false
   }
 
-  const subscriptionId = process.env.WEBSITE_OWNER_NAM.split('+')[0]
+  const subscriptionId = process.env.WEBSITE_OWNER_NAME.split('+')[0]
   const client = new WebSiteManagementClient(credentials, subscriptionId)
 
   const mainInstance = await client.webApps
