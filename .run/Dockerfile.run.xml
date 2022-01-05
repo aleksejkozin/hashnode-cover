@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="cover-infrastructure/Dockerfile: Compose Deployment" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
+  <configuration default="false" name="infrastructure/Dockerfile: Compose Deployment" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
     <deployment type="dockerfile">
       <settings>
         <option name="imageTag" value="runner" />
@@ -17,7 +17,7 @@
             </DockerPortBindingImpl>
           </list>
         </option>
-        <option name="sourceFilePath" value="packages/cover-infrastructure/Dockerfile" />
+        <option name="sourceFilePath" value="packages/infrastructure/Dockerfile" />
       </settings>
     </deployment>
     <method v="2">

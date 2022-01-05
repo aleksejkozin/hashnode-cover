@@ -45,19 +45,26 @@ Each cloud has unique resources, but they are all alike:
 - Etc
 Configs will vary, but the ideas are the same
 
-# Warning: NEVER terminate Pulumi unexpectedly
-No CTRL+C, no computer reboot. You may end up in an inconsistent state.
+# Inconsistent State
 This state could be only resolved by a manual intervention.
-
 At some point you WILL end up in an inconsistent state tho.
 Use these manual commands to fix your state:
-- pulumi stack -u
+- pulumi about
 - pulumi state delete *urn*
 
 # You need to know what are Pulumi's Output<T> Input<T>
 Before you begin please read https://www.pulumi.com/docs/intro/concepts/inputs-outputs/
 Use interpolate to build ALL strings in this file
 interpolate() - will resolve Outputs/Inputs and Promises and join a string.
+*/
+
+/*
+# Warning: NEVER terminate Pulumi unexpectedly
+No CTRL+C, no computer reboot. You may end up in an inconsistent state.
+
+# Warning: You can't import here monorepo packages
+To allow the import you need to compile index.ts with nx.
+This is achievable for sure, but
 */
 
 import * as resources from '@pulumi/azure-native/resources'
@@ -72,6 +79,7 @@ import * as azuread from '@pulumi/azuread'
 import * as authorization from '@pulumi/azure-native/authorization'
 import * as auth0 from '@pulumi/auth0'
 import * as random from '@pulumi/random'
+import {sleep} from '@hashnode-cover/common'
 
 const cfg = new pulumi.Config()
 
@@ -129,7 +137,7 @@ const adApp = new azuread.Application(`${p}adapp`, {
 const runnerSp = new azuread.ServicePrincipal(`${p}adsp`, {
   applicationId: adApp.applicationId.apply(async x => {
     // Workaround for a bug in Terraform
-    await new Promise(resolve => setTimeout(resolve, 10000))
+    await sleep(10000)
     return x
   }),
 })
@@ -215,8 +223,10 @@ const {imageName} = new docker.Image(`${appName}image`, {
   imageName: interpolate`${dockerRegistry.server}/${appName}`,
   build: {
     target: 'runner',
-    context: path.join(__dirname, '../../'),
-    dockerfile: path.join(__dirname, 'Dockerfile'),
+    // We need to resolve a relative path to the monorepo root
+    // This is why it is important that infrastructure.ts was on the same level as the compiled index.js
+    context: path.resolve(__dirname, '../../'),
+    dockerfile: path.resolve(__dirname, 'Dockerfile'),
   },
   registry: dockerRegistry,
 })

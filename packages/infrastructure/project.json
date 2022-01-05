@@ -1,0 +1,68 @@
+{
+  "root": "packages/infrastructure",
+  "sourceRoot": "packages/infrastructure",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/node:build",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "optimization": true,
+        "outputPath": "packages/infrastructure/",
+        "outputFileName": "index.js",
+        "main": "packages/infrastructure/infrastructure.ts",
+        "tsConfig": "packages/infrastructure/tsconfig.app.json"
+      }
+    },
+    "pulumi": {
+      "executor": "@nrwl/workspace:run-commands",
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": "self"
+        }
+      ],
+      "options": {
+        "command": "pulumi",
+        "parallel": false,
+        "cwd": "packages/infrastructure"
+      }
+    },
+    "deploy": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "nx pulumi up -y --stack=prod"
+      }
+    },
+    "loadenv": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "nx pulumi stack output --show-secrets --json --stack=prod > global_environment.json"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/infrastructure/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "coverage/packages/infrastructure"
+      ],
+      "options": {
+        "jestConfig": "packages/infrastructure/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

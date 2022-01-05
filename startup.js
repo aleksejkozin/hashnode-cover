@@ -9,9 +9,9 @@ In the cloud these variables will be configured by the cloud provider
 But in local development we need to fetch them from pulumi
 */
 try {
-  const data = require('./packages/cover-infrastructure/global_environment.json')
+  const data = require('./packages/infrastructure/global_environment.json')
   const globalEnvironmentVariables = Object.entries(
-    data?.globalEnvironmentVariables ?? {}
+    data?.globalEnvironmentVariables ?? {},
   )
   globalEnvironmentVariables.forEach(([k, v]) => {
     // We don't want to overwrite existing environment variables
@@ -19,12 +19,14 @@ try {
       process.env[k] = String(v)
     }
   })
-} catch {}
+} catch {
+  // Do nothing
+}
 
 // 2. Load local environment variables
 const dotenv = require('dotenv')
-dotenv.config({ path: '.env' })
-dotenv.config({ path: '.env.local' })
+dotenv.config({path: '.env'})
+dotenv.config({path: '.env.local'})
 
 // 3. Initialize logging. All our apps should send logs to app insights
 if (process.env.APPINSIGHTS_INSTRUMENTATIONKEY) {

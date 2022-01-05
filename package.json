@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "yarn nx run-many --target=serve --all",
-    "predev": "yarn nx loadenv cover-infrastructure",
+    "predev": "yarn nx run-many --target=loadenv --all",
     "test": "yarn nx run-many --target=test --all",
     "format": "yarn nx format:write",
     "deploy": "yarn nx run-many --target=deploy --all --prod",
@@ -19,7 +19,8 @@
     "dependencies": "There is no difference between devDependencies and dependencies, both will be in production",
     "dev": "Will watch for all files and run all services. Needs .env.global to function",
     "loadenv": "Will create packages/cover-infrastructure/global_environment.json",
-    "deploy": "Will push everything to the cloud. You need to do 'az login' first"
+    "deploy": "Will push everything to the cloud. You need to do 'az login' first. Use it for hot fixs around pipiline",
+    "husky": "Will run commands on git-commit and git-push. To disable it run git with --no-verify"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^1.6.2",
@@ -80,12 +81,12 @@
     "eslint-plugin-jsx-a11y": "6.4.1",
     "eslint-plugin-react": "7.26.1",
     "eslint-plugin-react-hooks": "4.2.0",
+    "husky": "^7.0.4",
     "jest": "27.2.3",
     "prettier": "^2.3.1",
     "react-test-renderer": "17.0.2",
     "regenerator-runtime": "0.13.7",
     "sass": "1.43.2",
-    "ts-jest": "27.0.5",
-    "husky": "^7.0.4"
+    "ts-jest": "27.0.5"
   }
 }

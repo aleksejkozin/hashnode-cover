@@ -40,6 +40,3 @@ Thumbs.db
 /old/
 .env.local
 .env.global
-
-# Should be used during a local run only
-packages/cover-infrastructure/global_environment.json
