@@ -1,5 +1,5 @@
 /*
-This module will automatically run on any nodejs start
+This module will automatically run on an app start
 You can't use monorepo modules here or typescript cuz we don't compile it
 */
 
@@ -9,12 +9,12 @@ In the cloud these variables will be configured by the cloud provider
 But in local development we need to fetch them from pulumi
 */
 try {
-  const data = require('./packages/cover-infrastructure/output.json')
+  const data = require('./packages/cover-infrastructure/global_environment.json')
   const globalEnvironmentVariables = Object.entries(
     data?.globalEnvironmentVariables ?? {}
   )
   globalEnvironmentVariables.forEach(([k, v]) => {
-    // We don't want to overwrite existing environment variables as dotenv does
+    // We don't want to overwrite existing environment variables
     if (!(k in process.env)) {
       process.env[k] = String(v)
     }

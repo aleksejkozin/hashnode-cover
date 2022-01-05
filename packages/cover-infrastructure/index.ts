@@ -115,22 +115,29 @@ const resourceGroup = resources.getResourceGroupOutput({
 // ----------------
 
 /*
-You can add users into this Azure AD group and they will have an access to run the app
-To run the app a user needs a set of permissions like:
-- reading app configs
-- reading queues
-The Azure AD group has all these permissions set,
-You only need to manually add your devs there so they could run the app locally
+At first we will create a service principal our application
+SP is like a user, but it for programs, and not humans
+We can attach permissions to the SP. The app needs the permissions to have access to Azure resources
 */
-const workers = new azuread.Group(`${p}workers`, {
-  displayName: `${p}workers`,
-  // This group is for IAM access
-  securityEnabled: true,
+// Warning: Might be deprecated on 30 of June of 2022
+const adApp = new azuread.Application(`${p}adapp`, {
+  displayName: `${p}`,
 })
+const runnerSp = new azuread.ServicePrincipal(`${p}adsp`, {
+  applicationId: adApp.applicationId.apply(async (x) => {
+    // Workaround for a bug in Terraform
+    await new Promise((resolve) => setTimeout(resolve, 10000))
+    return x
+  }),
+})
+const runnerSpPass = new azuread.ApplicationPassword(`${p}adapppass`, {
+  applicationObjectId: adApp.objectId,
+})
+// Here put all the app's permissions
 new authorization.RoleAssignment(`${p}allowreadresources`, {
   scope: resourceGroup.id,
-  principalId: workers.id,
-  principalType: 'Group',
+  principalId: runnerSp.id,
+  principalType: 'ServicePrincipal',
   /*
   Reader
   View all resources, but does not allow you to make any changes.
@@ -216,10 +223,6 @@ const app = new web.WebApp(appName, {
   serverFarmId: cfg.require('appServicePlanId'),
   httpsOnly: true,
   kind: 'app',
-  identity: {
-    // This will push credentials as environment variables to the container
-    type: 'SystemAssigned',
-  },
   siteConfig: {
     // Could be enabled starting from B1 AppServicePlan
     alwaysOn: true,
@@ -230,12 +233,6 @@ const app = new web.WebApp(appName, {
     // nodes count, more nodes – more power
     preWarmedInstanceCount: 1,
   },
-})
-
-// Our app should have access to our cloud resources
-new azuread.GroupMember(appName + 'isworker', {
-  groupObjectId: workers.id,
-  memberObjectId: app.identity.apply((x) => x?.principalId),
 })
 
 // Our app will be run on these endpoints
@@ -261,20 +258,34 @@ const auth0Application = new auth0.Client(appName + 'auth0', {
   callbacks: appUrls.map((x) => interpolate`${x}/api/auth/callback`),
 })
 
-// Cloud Apps, local Docker containers, etc, everyone will have these environment variables
-// Don't rename this variable, the name is important for the local app to work
+/*
+Cloud Apps, local Docker containers, etc, everyone will have these environment variables
+Don't rename this variable, the name is important for the local app to work
+Warning:
+- You will need to rotate out your secrets when you remove members of your team
+- If you will not do it, then removed team member will still have output.json with all dev secrets
+Secretes created by Pulumi are easy to rotate, just update their name
+However, external secrets like MONGO_CONNECTION_STRING you will need to rotate manually
+Usually such services have a setting to rotate secrets automatically on timer
+*/
 export const globalEnvironmentVariables = {
+  STORAGE_ACCOUNT: storageAccount.name,
+  MONGO_CONNECTION_STRING_SECRET: cfg.requireSecret('MONGO_CONNECTION_STRING'),
+  // These allow to login into Azure using DefaultAzureCredential()
+  AZURE_CLIENT_ID: runnerSp.applicationId,
+  AZURE_TENANT_ID: runnerSp.applicationTenantId,
+  AZURE_CLIENT_SECRET: runnerSpPass.value,
+  // For OIDC auth
   AUTH0_ISSUER_BASE_URL: interpolate`https://${auth0.config.domain}`,
   AUTH0_CLIENT_ID: auth0Application.clientId,
   AUTH0_CLIENT_SECRET: auth0Application.clientSecret,
-  MONGO_CONNECTION_STRING: cfg.requireSecret('MONGO_CONNECTION_STRING'),
-  STORAGE_ACCOUNT: storageAccount.name,
 }
+// Anyone that has access to WebApp settings has access to all the secrets
 new web.WebAppApplicationSettings(appName + 'settings', {
   resourceGroupName: resourceGroup.name,
   name: app.name,
   properties: {
-    // App Insights config
+    // App Insights config. Don't pass this key to global cuz this will pollute logs
     APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.instrumentationKey,
     // Do not persist or share /home/ directory between instances
     WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false',

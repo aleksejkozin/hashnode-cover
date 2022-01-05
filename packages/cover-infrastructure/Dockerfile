@@ -76,32 +76,15 @@ RUN --mount=type=cache,target=/usr/local/share/.cache \
 # It doesn't worth it
 
 
-# Will bake your credentials inside a container
-# You will need to click on the URL in terminal to log in and enter the code.
-# Warning: the code might be split on 2 lines due to output corruption
-FROM mcr.microsoft.com/azure-cli AS login
-RUN az login
-
-
-# Use this container to run the app locally
-# You will also need to bake "output.json" inside the container
-# In Webstom "Right click on the Dockerfile -> Run"
-# Webstorm has all configs baked into "cover-infrastructure_Dockerfile.run.xml"
-FROM builder AS local_runner
-# Copy baked credentials to the container
-COPY --from=login /root/.azure /root/.azure
-WORKDIR /monorepo
-EXPOSE 3000
-CMD packages/cover-infrastructure/run.sh
-
-
 # Production runner
-# Azure cloud will automatically provide a managed identity credentials as MSI env variables
-# But you can't just run the container locally:
-# - You'll need to install and do "az login"
-# - You'll need to pass Pulumi output as global environment variables
+# If you use Webstorm you can right click on this file and press "Run". This will run the app in a container
+# You have all the dependencies in the container avalibale, so you don't need to install them locally
+# However, you can't debug in the container
 FROM builder AS runner
 WORKDIR /monorepo
 EXPOSE 3000
-CMD packages/cover-infrastructure/run.sh
-
+# --kill-others will kill all the apps if one of the app crashes
+# this will allow docker to restart
+CMD yarn env-cmd --no-override yarn concurrently --kill-others --raw \
+  "env-cmd --no-override -f packages/cover/.env          node_modules/.bin/next start dist/packages/cover -p 3000" \
+  "env-cmd --no-override -f packages/cover-workers/.env  node dist/packages/cover-workers/main.js"

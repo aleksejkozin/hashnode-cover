@@ -13,7 +13,7 @@
     "loadenv": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "pulumi stack output --show-secrets --json --stack=prod > output.json",
+        "command": "pulumi stack output --show-secrets --json --stack=prod > global_environment.json",
         "cwd": "packages/cover-infrastructure"
       }
     },

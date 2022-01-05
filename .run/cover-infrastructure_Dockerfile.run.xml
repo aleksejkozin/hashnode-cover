@@ -2,11 +2,11 @@
   <configuration default="false" name="cover-infrastructure/Dockerfile: Compose Deployment" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
     <deployment type="dockerfile">
       <settings>
-        <option name="imageTag" value="local_runner" />
+        <option name="imageTag" value="runner" />
         <option name="attachToContainerNeeded" value="true" />
-        <option name="buildCliOptions" value="--target=local_runner" />
+        <option name="buildCliOptions" value="--target=runner" />
         <option name="buildKitEnabled" value="true" />
-        <option name="containerName" value="local_runner" />
+        <option name="containerName" value="runner" />
         <option name="contextFolderPath" value="." />
         <option name="portBindings">
           <list>

@@ -53,5 +53,7 @@ export const isMainAppInstance = async () => {
     )
     .next()
 
+  console.log('mainInstance.value.name', mainInstance.value.name)
+
   return mainInstance.value.name === process.env.WEBSITE_INSTANCE_ID
 }
