@@ -3,4 +3,4 @@
 
 # This one contains secrets
 # Should be used during a local run only
-global_environment.json
+/global_environment.json

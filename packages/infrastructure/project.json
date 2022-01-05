@@ -14,7 +14,7 @@
         "tsConfig": "packages/infrastructure/tsconfig.app.json"
       }
     },
-    "pulumi": {
+    "deploy": {
       "executor": "@nrwl/workspace:run-commands",
       "dependsOn": [
         {
@@ -23,21 +23,23 @@
         }
       ],
       "options": {
-        "command": "pulumi",
+        "command": "pulumi up -y --stack=prod",
         "parallel": false,
         "cwd": "packages/infrastructure"
       }
     },
-    "deploy": {
-      "executor": "@nrwl/workspace:run-commands",
-      "options": {
-        "command": "nx pulumi up -y --stack=prod"
-      }
-    },
     "loadenv": {
       "executor": "@nrwl/workspace:run-commands",
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": "self"
+        }
+      ],
       "options": {
-        "command": "nx pulumi stack output --show-secrets --json --stack=prod > global_environment.json"
+        "command": "pulumi stack output --show-secrets --json --stack=prod > global_environment.json",
+        "parallel": false,
+        "cwd": "packages/infrastructure"
       }
     },
     "lint": {
