@@ -12,6 +12,11 @@
         "outputFileName": "index.js",
         "main": "packages/infrastructure/infrastructure.ts",
         "tsConfig": "packages/infrastructure/tsconfig.app.json"
+      },
+      "configurations": {
+        "production": {
+          "optimization": true
+        }
       }
     },
     "deploy": {
