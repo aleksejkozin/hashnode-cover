@@ -1,3 +1,20 @@
+# Personally I'm not a fan of Azure Pipelines. I think GitHub Actions are better.
+# However, this pipeline has benefits:
+# - It is isolated from git, and only pulling changes inside. I think it's more secure
+# - It has Service Principal out of the box. But you can create one manually and then import to GitHub Actions
+#
+# I host my other projects on Git*Lab* and Git*Lab* doesn't hide project secrets, any maintainer dev can see them.
+# This is a security risk.
+# This is why I move my pipeline from Git*Lab* to Azure
+#
+# But if your main repository is in GitHub then you're highly encouraged to use GitHub Actions:
+# - Better tools, less bugs
+# - Free
+# - Better syntax
+#
+# You may also choose not to use pipelines at all. In this case you're free to deploy project by running `yarn deploy`
+# But in this case you'll need to provide production credentials to a human
+
 trigger:
   - master
 
@@ -8,6 +25,7 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
+  # This way we'll not need to download node_modules each run
   - task: Cache@2
     inputs:
       key: '"yarn" | "$(Agent.OS)" | yarn.lock'
@@ -30,6 +48,9 @@ steps:
   - script: yarn install --frozen-lockfile --prefer-offline
     displayName: 'Install node_modules'
 
+  - script: yarn test
+    displayName: 'Testing'
+
   # This task will log into azure cli and run inlineScript
   - task: AzureCLI@2
     inputs:
@@ -40,7 +61,7 @@ steps:
       # PULUMI_ACCESS_TOKEN is a secret, so the only way to pass it as an env variable is using arguments
       arguments: '$(PULUMI_ACCESS_TOKEN)'
       addSpnToEnvironment: true
-      # Pulumi only supports "az login" with a service principal
+      # Pulumi only supports "az login" with a Service Principal in none interactive environment
       inlineScript: |
         export PULUMI_ACCESS_TOKEN=$1
         pulumi login
@@ -48,4 +69,4 @@ steps:
         export ARM_CLIENT_SECRET=$servicePrincipalKey
         export ARM_TENANT_ID=$tenantId
         export ARM_SUBSCRIPTION_ID=$(az account list --query "[?isDefault].id | [0]" | tr -d '"')
-        yarn run deploy
+        yarn deploy

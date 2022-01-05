@@ -1,4 +1,4 @@
-import { withApiAuthRequired, getSession } from '@auth0/nextjs-auth0'
+import {withApiAuthRequired, getSession} from '@auth0/nextjs-auth0'
 
 export default withApiAuthRequired(async (req, res) => {
   const session = getSession(req, res)
@@ -7,5 +7,4 @@ export default withApiAuthRequired(async (req, res) => {
     message: 'hello!',
     baseUrl: process.env.AUTH0_BASE_URL,
     user: session?.user,
-  })
-})
+  }) })

@@ -67,7 +67,7 @@ import * as insights from '@pulumi/azure-native/insights'
 import * as path from 'path'
 import * as docker from '@pulumi/docker'
 import * as pulumi from '@pulumi/pulumi'
-import { interpolate } from '@pulumi/pulumi'
+import {interpolate} from '@pulumi/pulumi'
 import * as azuread from '@pulumi/azuread'
 import * as authorization from '@pulumi/azure-native/authorization'
 import * as auth0 from '@pulumi/auth0'
@@ -115,18 +115,21 @@ const resourceGroup = resources.getResourceGroupOutput({
 // ----------------
 
 /*
-At first we will create a service principal our application
-SP is like a user, but it for programs, and not humans
+At first we will create a service principal for our application
+SP is like a user account, but it for programs, and not humans
 We can attach permissions to the SP. The app needs the permissions to have access to Azure resources
+What you need to know about the permissions:
+- They propagate slowly, about 15 minutes after creating they become available
+- You need permissions to do any operation with an Azure resource, even to read config
 */
 // Warning: Might be deprecated on 30 of June of 2022
 const adApp = new azuread.Application(`${p}adapp`, {
   displayName: `${p}`,
 })
 const runnerSp = new azuread.ServicePrincipal(`${p}adsp`, {
-  applicationId: adApp.applicationId.apply(async (x) => {
+  applicationId: adApp.applicationId.apply(async x => {
     // Workaround for a bug in Terraform
-    await new Promise((resolve) => setTimeout(resolve, 10000))
+    await new Promise(resolve => setTimeout(resolve, 10000))
     return x
   }),
 })
@@ -192,7 +195,7 @@ new storage.BlobContainer(
     publicAccess: 'None',
   },
   // We have valuable client data there, so let's block any delete attempt
-  { protect: true }
+  {protect: false},
 )
 
 // ------------------------
@@ -208,7 +211,7 @@ The image will be several gigabytes, it way take 10-20 minutes to push it to the
 Then another 10-20 minutes to run it
 Deployment is slow
 */
-const { imageName } = new docker.Image(`${appName}image`, {
+const {imageName} = new docker.Image(`${appName}image`, {
   imageName: interpolate`${dockerRegistry.server}/${appName}`,
   build: {
     target: 'runner',
@@ -230,7 +233,11 @@ const app = new web.WebApp(appName, {
     httpLoggingEnabled: true,
     detailedErrorLoggingEnabled: true,
     logsDirectorySizeLimit: 35, //in MB
-    // nodes count, more nodes – more power
+    /*
+    Nodes count
+    Our app is stateless, with load balancers and queues
+    This means more nodes = more power
+    */
     preWarmedInstanceCount: 1,
   },
 })
@@ -254,8 +261,8 @@ const auth0Application = new auth0.Client(appName + 'auth0', {
   },
   webOrigins: appUrls,
   allowedOrigins: appUrls,
-  allowedLogoutUrls: appUrls.map((x) => interpolate`${x}/api/auth/logout`),
-  callbacks: appUrls.map((x) => interpolate`${x}/api/auth/callback`),
+  allowedLogoutUrls: appUrls.map(x => interpolate`${x}/api/auth/logout`),
+  callbacks: appUrls.map(x => interpolate`${x}/api/auth/callback`),
 })
 
 /*
@@ -276,6 +283,10 @@ export const globalEnvironmentVariables = {
   AZURE_TENANT_ID: runnerSp.applicationTenantId,
   AZURE_CLIENT_SECRET: runnerSpPass.value,
   // For OIDC auth
+  AUTH0_BASE_URL: localUrl,
+  AUTH0_SECRET: new random.RandomPassword(appName + 'auth0localsecret', {
+    length: 256,
+  }).result,
   AUTH0_ISSUER_BASE_URL: interpolate`https://${auth0.config.domain}`,
   AUTH0_CLIENT_ID: auth0Application.clientId,
   AUTH0_CLIENT_SECRET: auth0Application.clientSecret,
@@ -285,6 +296,8 @@ new web.WebAppApplicationSettings(appName + 'settings', {
   resourceGroupName: resourceGroup.name,
   name: app.name,
   properties: {
+    // We need to bake this here so common variables update would restart the container
+    ...globalEnvironmentVariables,
     // App Insights config. Don't pass this key to global cuz this will pollute logs
     APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.instrumentationKey,
     // Do not persist or share /home/ directory between instances
@@ -297,9 +310,10 @@ new web.WebAppApplicationSettings(appName + 'settings', {
     DOCKER_ENABLE_CI: 'true',
     // Our application exposed port. We run NextJs on it
     WEBSITES_PORT: '3000',
-    // We need to bake this here so common variables update would restart the container
-    ...globalEnvironmentVariables,
-    // These AUTH0_* configs are specific to this web app instance and should not be shared outside
+    /*
+    These AUTH0_* configs are specific to this web app instance and should not be shared outside
+    Should overwrite globalEnvironmentVariables
+    */
     AUTH0_BASE_URL: appUrl,
     AUTH0_SECRET: new random.RandomPassword(appName + 'auth0secret', {
       length: 256,

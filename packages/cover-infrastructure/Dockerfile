@@ -83,6 +83,16 @@ RUN --mount=type=cache,target=/usr/local/share/.cache \
 FROM builder AS runner
 WORKDIR /monorepo
 EXPOSE 3000
+# Don't run in production with nx:
+# - run-main will not restart if one of the apps crashes
+# - and --watch=false nx instanly exits the app if it doesn't have an endless loop
+#
+# You can't run background workers in NextJs cuz they don't have this functionality. You can spend weeks on configuring wabpack
+# You will need to run 2 applications, if you want background workers
+# There are two options to do it: concurrently and Docker compose
+# concurrently is way easier
+# You can do compose tho, but it will be harder to run the system locally in docker and it will const you more configuration
+#
 # --kill-others will kill all the apps if one of the app crashes
 # this will allow docker to restart
 CMD yarn env-cmd --no-override yarn concurrently --kill-others --raw \

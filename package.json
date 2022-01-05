@@ -7,16 +7,19 @@
     "node": ">=14"
   },
   "scripts": {
-    "dev": "yarn nx run-many --target=serve --parallel --all",
+    "dev": "yarn nx run-many --target=serve --all",
     "predev": "yarn nx loadenv cover-infrastructure",
-    "deploy": "yarn nx run-many --target=deploy --all --prod"
+    "test": "yarn nx run-many --target=test --all",
+    "format": "yarn nx format:write",
+    "deploy": "yarn nx run-many --target=deploy --all --prod",
+    "prepare": "husky install"
   },
   "comments": {
     "warning": "Any package.json update will cause a huge Docker recompile. Try to avoid updating this file",
     "dependencies": "There is no difference between devDependencies and dependencies, both will be in production",
     "dev": "Will watch for all files and run all services. Needs .env.global to function",
-    "loadenv": "Will create packages/cover-infrastructure/output.json",
-    "deploy": "Will push everything to the cloud"
+    "loadenv": "Will create packages/cover-infrastructure/global_environment.json",
+    "deploy": "Will push everything to the cloud. You need to do 'az login' first"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^1.6.2",
@@ -82,6 +85,7 @@
     "react-test-renderer": "17.0.2",
     "regenerator-runtime": "0.13.7",
     "sass": "1.43.2",
-    "ts-jest": "27.0.5"
+    "ts-jest": "27.0.5",
+    "husky": "^7.0.4"
   }
 }
