@@ -207,46 +207,9 @@ const { imageName } = new docker.Image(`${appName}image`, {
     target: 'runner',
     context: path.join(__dirname, '../../'),
     dockerfile: path.join(__dirname, 'Dockerfile'),
-    // It seems cacheFrom is super slow, skipping it
-    // cacheFrom: { stages: ['dependencies', 'builder', 'runner'] },
   },
   registry: dockerRegistry,
 })
-
-/*
-Beginning of 2022: Don't run your applications with "nx run-many --parallel ..."
-If one of the apps crashes the rest continue to live
-And you want them all dead, so they would be restarted with "restart: always"
-
---watch=false will make sure that nx will exit on an app crash
-*/
-const dockerCompose = interpolate`
-services:
-  application:
-    image: ${imageName}
-    ports:
-      - "3000:3000"
-    restart: always
-    entrypoint: node_modules/.bin/next start dist/packages/cover -p 3000
-    env_file:
-    - packages/cover/.env
-    - .env
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:3000" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 1m
-
-  workers:
-    image: ${imageName}
-    restart: always
-    entrypoint: node dist/packages/cover-workers/main.js
-    env_file:
-    - packages/cover-workers/.env
-    - .env
-`.apply((x) => Buffer.from(x).toString('base64'))
-
 const app = new web.WebApp(appName, {
   resourceGroupName: resourceGroup.name,
   // We use an external service plan cuz it costs money to create a new one
@@ -260,8 +223,6 @@ const app = new web.WebApp(appName, {
   siteConfig: {
     // Could be enabled starting from B1 AppServicePlan
     alwaysOn: true,
-    // Also supports interpolate`DOCKER|${imageName}` if you only have 1 container
-    // interpolate`COMPOSE|${dockerCompose}`
     linuxFxVersion: interpolate`DOCKER|${imageName}`,
     httpLoggingEnabled: true,
     detailedErrorLoggingEnabled: true,
@@ -301,6 +262,7 @@ const auth0Application = new auth0.Client(appName + 'auth0', {
 })
 
 // Cloud Apps, local Docker containers, etc, everyone will have these environment variables
+// Don't rename this variable, the name is important for the local app to work
 export const globalEnvironmentVariables = {
   AUTH0_ISSUER_BASE_URL: interpolate`https://${auth0.config.domain}`,
   AUTH0_CLIENT_ID: auth0Application.clientId,
@@ -333,9 +295,3 @@ new web.WebAppApplicationSettings(appName + 'settings', {
     }).result,
   },
 })
-
-/*
-As you can see configuration of infrastructure is always a big hassle
-This is why it's very sane to delegate it to Vercel/Netlify clouds
-However, you can't delegate everything
-*/

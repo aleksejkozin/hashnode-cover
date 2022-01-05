@@ -15,7 +15,7 @@ steps:
         yarn | "$(Agent.OS)"
         yarn
       path: $(YARN_CACHE_FOLDER)
-    displayName: Cache Yarn packages
+    displayName: 'Cache yarn packages'
 
   - task: NodeTool@0
     inputs:
@@ -26,6 +26,9 @@ steps:
     inputs:
       version: 'latest'
     displayName: 'Install Pulumi'
+
+  - script: yarn install --frozen-lockfile --prefer-offline
+    displayName: 'Install node_modules'
 
   # This task will log into azure cli and run inlineScript
   - task: AzureCLI@2
@@ -38,11 +41,12 @@ steps:
       arguments: '$(PULUMI_ACCESS_TOKEN)'
       addSpnToEnvironment: true
       inlineScript: |
-        yarn install --frozen-lockfile --prefer-offline
         export PULUMI_ACCESS_TOKEN=$1
         pulumi login
+      # Pulumi only supports "az login" with a service principal
         export ARM_CLIENT_ID=$servicePrincipalId
         export ARM_CLIENT_SECRET=$servicePrincipalKey
         export ARM_TENANT_ID=$tenantId
+      # Sadly, this is the easiest way to get subscription id
         export ARM_SUBSCRIPTION_ID=$(az account list --query "[?isDefault].id | [0]" | tr -d '"')
         yarn run deploy

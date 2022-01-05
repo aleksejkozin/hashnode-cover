@@ -31,6 +31,3 @@ dist
 
 # They are platform dependant and should not be copied inside a container on the first step
 node_modules
-
-# Should be used during a local run only
-packages/cover-infrastructure/output.json

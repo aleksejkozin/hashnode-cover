@@ -48,7 +48,7 @@
 
 FROM node:14-alpine AS dependencies
 # Here we install our native OS dependencies
-# If you don't have native dependencies, then you don't need Docker, just deploy NextJs to Vercel
+# If you want to develop the project locally you will need to install them into your OS
 RUN apk update && apk add --no-cache \
     # nx uses git to calculate affected changes
     git \
@@ -57,7 +57,7 @@ RUN apk update && apk add --no-cache \
 WORKDIR /monorepo
 # If package.json hasn't changed you will use this layer as a cache so you'll not wait node_modules to download
 COPY package.json yarn.lock ./
-# We would like to mount yarn cache so we wouldn't need to re download dependencies from the internet
+# We would like to mount a yarn cache so we wouldn't need to re download dependencies from the internet
 # The mount works only with enabled Buildkite
 # Warning, don't mount a cache on node_modules, this will remove them from the container and put into the cache
 # This way you wont be able to bake the dependencies inside the container
@@ -76,14 +76,32 @@ RUN --mount=type=cache,target=/usr/local/share/.cache \
 # It doesn't worth it
 
 
+# Will bake your credentials inside a container
+# You will need to click on the URL in terminal to log in and enter the code.
+# Warning: the code might be split on 2 lines due to output corruption
+FROM mcr.microsoft.com/azure-cli AS login
+RUN az login
+
+
+# Use this container to run the app locally
+# You will also need to bake "output.json" inside the container
+# In Webstom "Right click on the Dockerfile -> Run"
+# Webstorm has all configs baked into "cover-infrastructure_Dockerfile.run.xml"
+FROM builder AS local_runner
+# Copy baked credentials to the container
+COPY --from=login /root/.azure /root/.azure
+WORKDIR /monorepo
+EXPOSE 3000
+CMD packages/cover-infrastructure/run.sh
+
+
 # Production runner
 # Azure cloud will automatically provide a managed identity credentials as MSI env variables
-# But you can't just run the container locally, you'll need to do "az login" or provide MSI credentials via env variables
-# To do "az login" you need to have the azure cli installed, it's a hassle, we will skip it
-# But if you're intereted in the cli, you need to copy /bin/ /lib/ from mcr.microsoft.com/azure-cli
+# But you can't just run the container locally:
+# - You'll need to install and do "az login"
+# - You'll need to pass Pulumi output as global environment variables
 FROM builder AS runner
 WORKDIR /monorepo
 EXPOSE 3000
-CMD yarn env-cmd yarn concurrently -k \
-  "env-cmd -f packages/cover/.env          node_modules/.bin/next start dist/packages/cover -p 3000" \
-  "env-cmd -f packages/cover-workers/.env  node dist/packages/cover-workers/main.js"
+CMD packages/cover-infrastructure/run.sh
+

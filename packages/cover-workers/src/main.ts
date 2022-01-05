@@ -10,7 +10,7 @@ You can run periodic tasks using the cron package
 You can get info about cron syntax here: https://crontab.cronhub.io/
 However, if you run your system on multiple nodes, you would like to run the task only on 1 main node
 */
-new CronJob('0 */1 * * * *', async () => {
+new CronJob('*/5 * * * * *', async () => {
   try {
     if (await isMainAppInstance()) {
       console.log('Running reporting...')
