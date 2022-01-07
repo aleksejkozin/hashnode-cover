@@ -21,6 +21,6 @@ module.exports = {
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': ['error'],
     'react/no-children-prop': 'off',
-    'no-constant-condition': 'off'
+    'no-constant-condition': 'off',
   },
 }

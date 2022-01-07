@@ -6,7 +6,7 @@ const {merge} = require('webpack-merge')
 const base = {
   resolve: {
     // Allow webpack to resolve these extensions
-    extensions: ['.ts', '.tsx', '.js', '.jsx']
+    extensions: ['.ts', '.tsx', '.js', '.jsx'],
   },
   module: {
     rules: [
