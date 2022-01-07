@@ -9,7 +9,7 @@
   "scripts": {
     "serve:dev": "yarn loadenv && concurrently --raw 'nodemon ./src/backend/main.ts' 'nodemon ./src/workers/main.ts' 'webpack --mode=development --watch'",
     "serve:prod": "cross-env NODE_ENV=production concurrently --raw --kill-others-on-fail 'ts-node ./src/backend/main.ts' 'ts-node ./src/workers/main.ts'",
-    "build": "webpack --mode=production",
+    "build": "cross-env DOCKER_BUILDKIT=1 webpack --mode=production",
     "format": "prettier --write .",
     "test": "tsc --noEmit && jest",
     "loadenv": "pulumi stack output --show-secrets --json --stack=prod --cwd=./src/infra > ./src/common/global_environment.json",
