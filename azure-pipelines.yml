@@ -48,9 +48,6 @@ steps:
   - script: yarn install --frozen-lockfile --prefer-offline
     displayName: 'Install node_modules'
 
-  - script: yarn test
-    displayName: 'Testing'
-
   # This task will log into azure cli and run inlineScript
   - task: AzureCLI@2
     inputs:

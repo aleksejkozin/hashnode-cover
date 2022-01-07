@@ -1,6 +1,0 @@
-# Don't commit backed Pulumi
-/index.*
-
-# This one contains secrets
-# Should be used during a local run only
-/global_environment.json
