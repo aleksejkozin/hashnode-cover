@@ -9,6 +9,7 @@
     "experimentalDecorators": true,
     "esModuleInterop": true,
     "importHelpers": true,
+    "strict": true,
     "jsx": "react",
     "target": "es2017",
     // Node only supports commonjs modules afaik

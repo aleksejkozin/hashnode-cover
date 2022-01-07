@@ -1,16 +1,12 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import {BrowserRouter, Routes, Route, Outlet, Link} from 'react-router-dom'
+import {BrowserRouter, Outlet, Route, Routes} from 'react-router-dom'
 import {QueryClient, QueryClientProvider} from 'react-query'
+import {FeatureArticles} from './FeatureArticles'
 
 const App = () => (
-  <div>
-    <h1>App</h1>
-    <nav>
-      <Link to='/lol'>Lol2</Link>
-      <Link to='/Internet'>Internet</Link>
-      <br />
-    </nav>
+  <div style={{width: '500px', margin: 'auto'}}>
+    <h1>Hashnode Cover</h1>
     <Outlet />
   </div>
 )
@@ -19,9 +15,8 @@ const Router = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path='/' element={<App />}>
-          <Route path='/lol' element={<div>Lol</div>} />
-          <Route path='/internet' element={<div>Internet</div>} />
+        <Route element={<App />}>
+          <Route path='/' element={<FeatureArticles />} />
         </Route>
       </Routes>
     </BrowserRouter>
