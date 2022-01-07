@@ -73,6 +73,7 @@ COPY . .
 RUN --mount=type=cache,target=/usr/local/share/.cache \
     # We would like to mount nx cache so rebuilds would be faster
     --mount=type=cache,target=/monorepo/node_modules/.cache \
+    # Don't forget to run tests. And they need to be run in docker so they can use the OS dependencies
     yarn build && yarn test
 # You can remove dev dependencies, it will save you ~500Mb, but can create a surprise failed updload
 # It doesn't worth it
