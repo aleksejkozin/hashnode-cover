@@ -48,10 +48,9 @@ FROM node:14-alpine AS dependencies
 
 # OS Dependencies. You will need these dependencies to develop the project locally
 # Please, install them manually on your OS
-COPY --from=python:3.8-buster /usr/bin/ /usr/bin/
-COPY --from=python:3.8-buster /usr/lib/ /usr/lib/
 RUN apk update && apk add --no-cache \
-    # nx uses git to calculate affected changes
+    python3 \
+    py3-pip \
     curl
 # ^^^^^^^^^^^^^^^^
 
