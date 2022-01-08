@@ -96,7 +96,9 @@ export const getHashnodeArticles = async (
   const {
     data: {
       data: {
-        user: {publication: {posts}},
+        user: {
+          publication: {posts},
+        },
       },
     },
   } = await axios.post(
