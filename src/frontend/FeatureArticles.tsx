@@ -1,108 +1,116 @@
 import React from 'react'
 import {useMutation, useQuery, useQueryClient} from 'react-query'
 import axios from 'axios'
-import {UserType} from '../backend/api'
 import {Form} from '../common/ui/Form'
 
 const useUser = () =>
-  useQuery('user', async () =>
-    axios.get('/api/user').then(res => res.data as UserType),
-  )
-
-function CreateHashnodeConnection() {
-  const queryClient = useQueryClient()
-
-  const {
-    isLoading,
-    mutateAsync: connectHashnode,
-    error,
-    isError,
-  } = useMutation((x: any) => axios.post('/api/connections/hashnode', x), {
-    onSuccess: () => queryClient.invalidateQueries('user'),
-  })
-
-  if (isError) {
-    return <div>Something is terrible wrong: {JSON.stringify(error)}</div>
-  }
-
-  return (
-    <Form onSubmit={connectHashnode}>
-      <fieldset disabled={isLoading}>
-        <legend>Hashnode Connection</legend>
-        <label>
-          Personal Access Token:
-          <br />
-          <input type='text' name='token' />
-        </label>
-        <br />
-        <button type='submit' disabled={isLoading}>
-          Connect
-        </button>
-      </fieldset>
-    </Form>
-  )
-}
-
-function ResetHashnodeConnection() {
-  const queryClient = useQueryClient()
-
-  const {data: user} = useUser()
-
-  const {
-    isLoading,
-    mutateAsync: deleteHashnode,
-    error,
-    isError,
-  } = useMutation((x: any) => axios.delete('/api/connections/hashnode', x), {
-    onSuccess: () => queryClient.invalidateQueries('user'),
-  })
-
-  if (isError) {
-    return <div>Something is terrible wrong: {JSON.stringify(error)}</div>
-  }
-
-  return (
-    <Form onSubmit={deleteHashnode}>
-      <fieldset disabled={isLoading}>
-        <legend>Hashnode Connection</legend>
-        <label>
-          Personal Access Token:
-          <br />
-          <input
-            type='text'
-            name='token'
-            disabled={true}
-            value={user?.connections?.hashnode?.token}
-          />
-        </label>
-        <br />
-        <button type='submit' disabled={isLoading}>
-          Disconnect
-        </button>
-      </fieldset>
-    </Form>
-  )
-}
+  useQuery('user', () => axios.get('/api/user').then(res => res.data))
 
 function HashnodeConnection() {
+  const {invalidateQueries} = useQueryClient()
+  const onSuccess = () => invalidateQueries('user')
+
   const {data: user} = useUser()
 
-  return user?.connections?.hashnode ? (
-    <ResetHashnodeConnection />
-  ) : (
-    <CreateHashnodeConnection />
+  const {
+    mutateAsync: connectHashnode,
+    isLoading: l1,
+    error: e1,
+  } = useMutation(
+    (x: any) =>
+      axios.put('/api/user', {
+        connections: {hashnode: x},
+      }),
+    {onSuccess},
+  )
+
+  const {
+    mutateAsync: disconnectHashnode,
+    isLoading: l2,
+    error: e2,
+  } = useMutation(
+    () =>
+      axios.put('/api/user', {
+        connections: {hashnode: undefined},
+      }),
+    {onSuccess},
+  )
+
+  const isLoading = l1 || l2
+  const error = e1 || e2
+  const isSet = user?.connections?.hashnode !== undefined
+
+  if (error) {
+    return (
+      <>
+        <h2>Something is terrible wrong</h2>
+        <p>{JSON.stringify(error)}</p>
+      </>
+    )
+  }
+
+  return (
+    <Form onSubmit={x => (isSet ? disconnectHashnode() : connectHashnode(x))}>
+      <fieldset disabled={isLoading}>
+        <legend>Hashnode Connection</legend>
+        <p>
+          Open{' '}
+          <a
+            target='_blank'
+            rel='noreferrer'
+            href='https://hashnode.com/settings/developer'
+          >
+            https://hashnode.com/settings/developer
+          </a>{' '}
+          and press &quot;Generate&nbsp;New&nbsp;Token&quot;
+        </p>
+        <hr />
+        <label>
+          Personal Access Token:
+          <br />
+          {isSet ? (
+            <input
+              key='connectedInput'
+              type='text'
+              disabled={true}
+              style={{width: '100%'}}
+              value={user?.connections?.hashnode?.token}
+            />
+          ) : (
+            <input
+              type='text'
+              name='token'
+              disabled={isLoading}
+              required={true}
+              style={{width: '100%'}}
+              pattern='\w{8}-\w{4}-\w{4}-\w{4}-\w{12}'
+              title='It should look like this: 2d3dc949-94a5-46ed-98b9-c818c0a0fa21'
+            />
+          )}
+        </label>
+        <br />
+        <button type='submit' disabled={isLoading}>
+          {isSet ? 'Disconnect' : 'Connect'}
+        </button>
+      </fieldset>
+    </Form>
   )
 }
 
 export function FeatureArticles() {
-  const {isLoading, data, isError, error} = useUser()
+  const {isLoading, data, error} = useUser()
 
   if (isLoading) {
     return <div>Loading...</div>
   }
 
-  if (isError) {
-    return <div>Something is terrible wrong: {JSON.stringify(error)}</div>
+  if (error) {
+    return (
+      <>
+        <h2>Something is terrible wrong</h2>
+        <p>{JSON.stringify(error)}</p>
+      </>
+    )
   }
 
   return (

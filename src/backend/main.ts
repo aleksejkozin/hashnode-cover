@@ -6,15 +6,10 @@ import express from 'express'
 import {auth, requiresAuth} from 'express-openid-connect'
 import path from 'path'
 import {api} from './api'
-
-import {connect} from 'mongoose'
 import bodyParser from 'body-parser'
 
-connect(process.env.MONGO_CONNECTION_STRING_SECRET ?? '').then(() =>
-  console.log('Connected to MongoDB'),
-)
-
 const app = express()
+
 app.use(bodyParser.json())
 
 app.use(
