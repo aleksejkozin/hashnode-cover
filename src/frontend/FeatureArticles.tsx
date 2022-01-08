@@ -7,8 +7,8 @@ const useUser = () =>
   useQuery('user', () => axios.get('/api/user').then(res => res.data))
 
 function HashnodeConnection() {
-  const {invalidateQueries} = useQueryClient()
-  const onSuccess = () => invalidateQueries('user')
+  const queryClient = useQueryClient()
+  const onSuccess = () => queryClient.invalidateQueries('user')
 
   const {data: user} = useUser()
 
