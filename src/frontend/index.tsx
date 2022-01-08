@@ -1,12 +1,15 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import {BrowserRouter, Outlet, Route, Routes} from 'react-router-dom'
+import {BrowserRouter, Link, Outlet, Route, Routes} from 'react-router-dom'
 import {QueryClient, QueryClientProvider} from 'react-query'
 import {FeatureArticles} from './FeatureArticles'
+import {FeatureConnections} from './FeatureConnections'
 
 const App = () => (
   <div style={{width: '500px', margin: 'auto'}}>
-    <h1>Hashnode Cover</h1>
+    <Link to='/'>
+      <h1>Hashnode Cover</h1>
+    </Link>
     <Outlet />
   </div>
 )
@@ -17,6 +20,7 @@ const Router = () => {
       <Routes>
         <Route element={<App />}>
           <Route path='/' element={<FeatureArticles />} />
+          <Route path='/connections' element={<FeatureConnections />} />
         </Route>
       </Routes>
     </BrowserRouter>
