@@ -1,25 +1,17 @@
 {
-  "compileOnSave": false,
   "compilerOptions": {
-    "rootDir": ".",
-    "sourceMap": true,
+    "rootDir": "./src",
     "declaration": false,
-    "moduleResolution": "node",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
+    "strict": false,
+    "sourceMap": true,
     "esModuleInterop": true,
-    "importHelpers": true,
-    "strict": true,
     "jsx": "react",
-    "target": "es2017",
-    // Node only supports commonjs modules afaik
-    "module": "commonjs",
-    "lib": ["es2019", "dom"],
-    "skipLibCheck": true,
+    "noEmit": true,
     "skipDefaultLibCheck": true,
-    "baseUrl": ".",
-    "noImplicitAny": false
+    "skipLibCheck": true,
+    "module": "commonjs",
+    "target": "es2018",
+    "lib": ["ES2019", "DOM"]
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["new", "node_modules", "tmp"]
+  "exclude": ["node_modules", "dist"]
 }

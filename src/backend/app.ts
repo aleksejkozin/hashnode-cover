@@ -1,10 +1,5 @@
-import {initEnvironment} from '../common'
-
-initEnvironment()
-
 import express from 'express'
-import {auth, requiresAuth} from 'express-openid-connect'
-import path from 'path'
+import {auth} from 'express-openid-connect'
 import {api} from './api'
 import bodyParser from 'body-parser'
 
@@ -18,22 +13,22 @@ app.use(
     baseURL: process.env.AUTH0_BASE_URL,
     clientID: process.env.AUTH0_CLIENT_ID,
     secret: process.env.AUTH0_CLIENT_SECRET,
-    authRequired: false,
+    // All routes are protected
+    authRequired: true,
   }),
 )
 
-app.use(express.static(path.join(__dirname, '../frontend/public/')))
-app.use(express.static(path.join(__dirname, '../frontend/public/dist/')))
-app.use('/api', requiresAuth(), api)
+// Serve static files
+app.use(express.static('dist/frontend/public'))
+// This is how you group rotes with Router() and attach them to the app
+app.use('/api', api)
 
 /*
 We have a Single Page Application, so we serve index.html for all routes
 And react-router-dom will handle the routing
 The order of attaching routes matter you need to attach * the last
 */
-app.get('*', requiresAuth(), (_, res) =>
-  res.sendFile(path.join(__dirname, '../frontend/public/dist/index.html')),
-)
+app.use('*', express.static('dist/frontend/public/index.html'))
 
 app.listen(3000, () =>
   console.log(`${process.env.NODE_ENV} server run on http://localhost:3000`),

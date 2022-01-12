@@ -1,25 +1,10 @@
 import {WebSiteManagementClient} from '@azure/arm-appservice'
-import {promisify} from 'util'
-import {exec} from 'child_process'
 import {DefaultAzureCredential} from '@azure/identity'
-
-export const f = (x: number) => x
 
 export const sleep = (ms: number) =>
   new Promise(resolve => setTimeout(resolve, ms))
 
 export const credentials = new DefaultAzureCredential()
-
-// Escape string. We want protect ourself from an injection
-export const e = (x: string) => x.replace(/(["'$`\\])/g, '\\$1')
-
-/*
-Run command in terminal and return the result
-Will fail if the results is too big
-Use it only on commands that return minimum amount of text
-Don't forge to escape any variables with e()
-*/
-export const asyncExec = promisify(exec)
 
 /*
 Call this function before any other imports in your project
@@ -33,7 +18,7 @@ export const initEnvironment = () => {
   */
   try {
     const global =
-      require('./global_environment.json')?.globalEnvironmentVariables ?? {}
+      require('../../global_environment.json')?.globalEnvironmentVariables ?? {}
     process.env = {
       ...global,
       // Local should have higher priority than global
