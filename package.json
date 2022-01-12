@@ -6,7 +6,7 @@
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack",
     "deploy": "cross-env DOCKER_BUILDKIT=1 pulumi up -y --stack=prod --cwd=./src/infra",
-    "dev": "cross-env NODE_ENV=development webpack --watch --no-stats",
+    "dev": "yarn loadenv && cross-env NODE_ENV=development webpack --watch --no-stats",
     "format": "prettier --write . && sort-package-json",
     "loadenv": "pulumi stack output --show-secrets --json --stack=prod --cwd=./src/infra > global_environment.json",
     "prepare": "husky install",
